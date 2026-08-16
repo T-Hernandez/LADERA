@@ -99,3 +99,13 @@
 **Impacto:** `/api/datos` fusiona fixture + decisiones locales + sugerencias nuevas. Las decisiones quedan en `data/interim/relaciones_locales.json`.
 
 **Descartado:** confirmar por IA, pintar una sugerencia como hecho, o exigir un contrato para crear el reporte.
+
+## 2026-08-15 — El mapa recorta; no concluye
+
+**Decisión:** `/api/mapa` entrega el recorte por periodo y estado contractual. El frontend enciende o apaga capas (contratos, reportes, dinero) y no recalcula agregados. El panel de un municipio muestra cifra usable, contratos, activos, finalizados, reportes y relaciones. La nota fija: cero identificados no es cero inversión, y coincidir en el año no demuestra causa.
+
+**Motivo:** la Fase 8 pide identificar una zona y entender qué hay contratado, cuánta plata usable y qué se reporta. No pide un mapa de culpables ni meter SECOP real todavía.
+
+**Impacto:** `mapa/capas.py` es la fuente del recorte. La búsqueda inteligente es la Fase 9.
+
+**Descartado:** inferir causalidad, pintar solo contratos, o cargar la capa nacional en el navegador.

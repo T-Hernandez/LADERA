@@ -24,8 +24,30 @@
 
   <main class="cuerpo">
     <section class="mapa-caja" aria-label="Mapa de Antioquia">
+      <form class="mapa-capas" id="mapa-capas">
+        <fieldset>
+          <legend>Capas</legend>
+          <label><input type="checkbox" name="contratos" checked> Contratos</label>
+          <label><input type="checkbox" name="reportes" checked> Reportes</label>
+          <label><input type="checkbox" name="dinero"> Dinero</label>
+        </fieldset>
+        <label>Estado contractual
+          <select name="estado">
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="FINALIZADO">Finalizado</option>
+            <option value="PROXIMO_A_VENCER">Próximo a vencer</option>
+          </select>
+        </label>
+        <label>Periodo
+          <select name="anio">
+            <option value="">Todos</option>
+          </select>
+        </label>
+        <p class="mapa-nota">Ver contratación y reportes en el mismo año no demuestra causa.</p>
+      </form>
       <div id="mapa" role="application" aria-label="Municipios de Antioquia"></div>
-      <p class="mapa-leyenda">
+      <p class="mapa-leyenda" id="mapa-leyenda">
         <span class="chip chip-vacio">sin dato</span>
         <span class="chip chip-contrato">contratos</span>
         <span class="chip chip-reporte">reportes</span>

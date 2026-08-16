@@ -8,6 +8,9 @@
     marcas: [],
     puntoReporte: null,
     marcadorBorrador: null,
+    recorte: null,
+    capas: { contratos: true, reportes: true, dinero: false },
+    filtro: { anio: "", estado: "" },
   };
 
   const $panel = document.getElementById("panel-contenido");
@@ -67,14 +70,34 @@
     return yo;
   };
 
+  const snapDe = (dane) => (estado.recorte && estado.recorte.municipios[dane]) || null;
+
+  const colorDinero = (plata, max) => {
+    if (!plata || !max) return "#d9d2c4";
+    const t = Math.min(1, plata / max);
+    const r = Math.round(217 + (63 - 217) * t);
+    const g = Math.round(210 + (107 - 210) * t);
+    const b = Math.round(196 + (82 - 196) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
   const estilo = (feature, seleccionado) => {
-    const mun = municipio(daneDe(feature));
-    const tieneC = mun && mun.contratos > 0;
-    const tieneR = mun && mun.reportes > 0;
+    const dane = daneDe(feature);
+    const snap = snapDe(dane);
+    const capas = estado.capas;
+    const tieneC = capas.contratos && snap && snap.contratos > 0;
+    const tieneR = capas.reportes && snap && snap.reportes > 0;
     let fill = "#d9d2c4";
     let color = "#6a6256";
     let weight = 1;
-    if (tieneC && tieneR) {
+    if (capas.dinero && snap && snap.plata > 0) {
+      fill = colorDinero(snap.plata, estado.recorte.plata_max);
+      color = "#2a4032";
+      if (tieneR) {
+        color = "#b5523a";
+        weight = 2;
+      }
+    } else if (tieneC && tieneR) {
       fill = "#4a5e48";
       color = "#b5523a";
       weight = 2;
@@ -104,6 +127,7 @@
             ? reporte(estado.seleccionado.id)?.ubicacion.dane
             : null;
     estado.capa.setStyle((f) => estilo(f, daneDe(f) === daneSel));
+    pintarLeyenda();
   };
 
   const limpiarMarcas = () => {
@@ -111,10 +135,32 @@
     estado.marcas = [];
   };
 
+  const idsReporteRecorte = () => {
+    const ids = new Set();
+    if (!estado.recorte) return ids;
+    Object.values(estado.recorte.municipios).forEach((m) => {
+      (m.reporte_ids || []).forEach((id) => ids.add(id));
+    });
+    return ids;
+  };
+
+  const pintarLeyenda = () => {
+    const caja = document.getElementById("mapa-leyenda");
+    if (!caja) return;
+    const chips = ['<span class="chip chip-vacio">sin dato</span>'];
+    if (estado.capas.contratos) chips.push('<span class="chip chip-contrato">contratos</span>');
+    if (estado.capas.reportes) chips.push('<span class="chip chip-reporte">reportes</span>');
+    if (estado.capas.contratos && estado.capas.reportes) chips.push('<span class="chip chip-ambos">ambos</span>');
+    if (estado.capas.dinero) chips.push('<span class="chip chip-contrato">más cifra usable</span>');
+    caja.innerHTML = chips.join("");
+  };
+
   const marcarPuntos = () => {
     limpiarMarcas();
-    if (!estado.mapa || !estado.datos) return;
+    if (!estado.mapa || !estado.datos || !estado.capas.reportes) return;
+    const permitidos = idsReporteRecorte();
     Object.values(estado.datos.reportes).forEach((rep) => {
+      if (estado.recorte && !permitidos.has(rep.id)) return;
       const { lat, lng } = rep.ubicacion;
       if (lat == null || lng == null) return;
       const marca = L.circleMarker([lat, lng], {
@@ -238,7 +284,7 @@
   const vistaExplorar = () => {
     const r = estado.datos.resumen;
     return `
-      <p class="kicker">Fase 7 · contraste</p>
+      <p class="kicker">Fase 8 · mapa de trazabilidad</p>
       <h1>Una superficie para contrastar</h1>
       <p class="muted">
         LADERA guarda lo que las personas observan y lo pone al lado de la
@@ -264,17 +310,24 @@
   const vistaMunicipio = (dane) => {
     const mun = municipio(dane);
     if (!mun) return `<p>Municipio no encontrado.</p>`;
-    const contratos = mun.contrato_ids.map(contrato).filter(Boolean);
-    const reportes = mun.reporte_ids.map(reporte).filter(Boolean);
+    const snap = snapDe(dane) || mun;
+    const contratos = (snap.contrato_ids || mun.contrato_ids).map(contrato).filter(Boolean);
+    const reportes = (snap.reporte_ids || mun.reporte_ids).map(reporte).filter(Boolean);
+    const periodo = estado.filtro.anio ? ` · ${escapeHtml(estado.filtro.anio)}` : "";
     return `
-      <p class="kicker">Municipio · ${escapeHtml(mun.dane)}</p>
+      <p class="kicker">Municipio · ${escapeHtml(mun.dane)}${periodo}</p>
       <h1>${escapeHtml(mun.nombre)}</h1>
       <div class="cifras">
-        <div class="cifra"><b>${mun.contratos}</b> contratos identificados</div>
-        <div class="cifra"><b>${mun.reportes}</b> reportes</div>
-        <div class="cifra"><b>${plata(mun.plata_total)}</b> suma usable</div>
-        <div class="cifra"><b>${contratos.filter((c) => c.valor == null).length}</b> sin cifra usable</div>
+        <div class="cifra"><b>${plata(snap.plata != null ? snap.plata : mun.plata_total)}</b> cifra usable identificada</div>
+        <div class="cifra"><b>${snap.contratos != null ? snap.contratos : mun.contratos}</b> contratos identificados</div>
+        <div class="cifra"><b>${snap.finalizados || 0}</b> finalizados</div>
+        <div class="cifra"><b>${snap.activos || 0}</b> activos</div>
+        <div class="cifra"><b>${snap.reportes != null ? snap.reportes : mun.reportes}</b> reportes ciudadanos</div>
+        <div class="cifra"><b>${snap.contratos_relacionados || 0}</b> con relación confirmada</div>
+        <div class="cifra"><b>${snap.relaciones_sugeridas || 0}</b> posibles relaciones</div>
+        <div class="cifra"><b>${snap.sin_cifra || 0}</b> sin cifra usable</div>
       </div>
+      <p class="aviso">${escapeHtml((estado.recorte && estado.recorte.nota) || "Cero contratos identificados no significa cero inversión.")}</p>
       <h2>Contratos</h2>
       ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">Sin contratación identificada en el conjunto analizado.</p>`}
       <h2>Reportes</h2>
@@ -477,7 +530,7 @@
     else if (estado.seleccionado?.tipo === "municipio") $panel.innerHTML = vistaMunicipio(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "contrato") $panel.innerHTML = vistaContrato(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "reporte") $panel.innerHTML = vistaReporte(estado.seleccionado.id);
-    else $panel.innerHTML = `<p class="kicker">Mapa</p><h1>Elige un municipio</h1><p class="muted">Ciento veinticinco polígonos. El color dice si hay contratos, reportes, ambos o ninguno en el conjunto actual.</p>`;
+    else $panel.innerHTML = `<p class="kicker">Mapa de trazabilidad</p><h1>Elige un municipio</h1><p class="muted">Enciende o apaga capas. El periodo compara contratación y reportes. Eso no demuestra causa. Al elegir una zona verás qué hay contratado, cuánta cifra usable y qué se ha reportado.</p>`;
 
     const form = document.getElementById("form-reporte");
     if (form) {
@@ -498,8 +551,7 @@
         }
         quitarMarcadorBorrador();
         estado.datos = await (await fetch("/api/datos")).json();
-        marcarPuntos();
-        pintarCapa();
+        await cargarRecorte();
         abrir({ tipo: "reporte", id: creado.id });
       });
     }
@@ -523,6 +575,7 @@
           return;
         }
         estado.datos = await (await fetch("/api/datos")).json();
+        await cargarRecorte();
         renderPanel();
       });
     }
@@ -538,11 +591,36 @@
     }
   };
 
+  const llenarAnios = () => {
+    const sel = document.querySelector("#mapa-capas select[name=anio]");
+    if (!sel || !estado.recorte) return;
+    const actual = estado.filtro.anio;
+    const opciones = ['<option value="">Todos</option>'].concat(
+      (estado.recorte.anios || []).map((y) => `<option value="${y}"${String(y) === actual ? " selected" : ""}>${y}</option>`)
+    );
+    sel.innerHTML = opciones.join("");
+  };
+
+  const cargarRecorte = async () => {
+    const q = new URLSearchParams();
+    if (estado.filtro.anio) q.set("anio", estado.filtro.anio);
+    if (estado.filtro.estado) q.set("estado", estado.filtro.estado);
+    const res = await fetch(`/api/mapa?${q.toString()}`);
+    estado.recorte = await res.json();
+    llenarAnios();
+    pintarCapa();
+    marcarPuntos();
+    if (estado.vista === "mapa" || (estado.seleccionado && estado.seleccionado.tipo === "municipio")) {
+      renderPanel();
+    }
+  };
+
   const iniciarMapa = (geojson) => {
     estado.mapa = L.map("mapa", {
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: false,
     });
+    L.control.zoom({ position: "topright" }).addTo(estado.mapa);
     estado.capa = L.geoJSON(geojson, {
       style: (f) => estilo(f, false),
       onEachFeature: (feature, layer) => {
@@ -581,6 +659,7 @@
         return;
       }
       estado.datos = await (await fetch("/api/datos")).json();
+      await cargarRecorte();
       renderPanel();
       return;
     }
@@ -590,10 +669,35 @@
     abrir({ tipo, id });
   });
 
-  Promise.all([fetch("/api/datos").then((r) => r.json()), fetch("/assets/municipios_antioquia.geojson").then((r) => r.json())])
-    .then(([datos, geojson]) => {
+  const formCapas = document.getElementById("mapa-capas");
+  if (formCapas) {
+    formCapas.addEventListener("change", async (ev) => {
+      const campo = ev.target;
+      if (campo.type === "checkbox") {
+        estado.capas[campo.name] = campo.checked;
+        pintarCapa();
+        marcarPuntos();
+        return;
+      }
+      if (campo.name === "anio" || campo.name === "estado") {
+        estado.filtro[campo.name] = campo.value;
+        await cargarRecorte();
+      }
+    });
+    formCapas.addEventListener("click", (ev) => ev.stopPropagation());
+  }
+
+  Promise.all([
+    fetch("/api/datos").then((r) => r.json()),
+    fetch("/assets/municipios_antioquia.geojson").then((r) => r.json()),
+    fetch("/api/mapa").then((r) => r.json()),
+  ])
+    .then(([datos, geojson, recorte]) => {
       estado.datos = datos;
+      estado.recorte = recorte;
       iniciarMapa(geojson);
+      llenarAnios();
+      pintarLeyenda();
       renderPanel();
     })
     .catch((err) => {

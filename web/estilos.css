@@ -106,6 +106,58 @@ html, body {
   font-family: var(--sans);
 }
 
+.mapa-capas {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 500;
+  display: grid;
+  gap: 8px;
+  max-width: 240px;
+  padding: 10px 12px;
+  background: rgba(34, 30, 24, 0.9);
+  color: var(--papel);
+  font-size: 0.78rem;
+}
+
+.mapa-capas fieldset {
+  border: 1px solid var(--linea);
+  margin: 0;
+  padding: 6px 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.mapa-capas legend {
+  color: var(--oro);
+  padding: 0 4px;
+}
+
+.mapa-capas label {
+  display: grid;
+  gap: 4px;
+}
+
+.mapa-capas fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mapa-capas select {
+  background: var(--tinta);
+  color: var(--papel);
+  border: 1px solid var(--linea);
+  padding: 4px 6px;
+  font: inherit;
+}
+
+.mapa-nota {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .mapa-leyenda {
   position: absolute;
   left: 12px;
