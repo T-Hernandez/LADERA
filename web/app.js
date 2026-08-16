@@ -1149,6 +1149,14 @@
     if (formRetirar) {
       formRetirar.addEventListener("submit", async (ev) => {
         ev.preventDefault();
+        const seguro = await confirmarAccion({
+          titulo: "Retirar observación",
+          texto:
+            "Esto saca el reporte del mapa y de la búsqueda. El registro y su auditoría no se borran: sigue existiendo, solo deja de ser público. Puede volver a EN_REVISIÓN más adelante.",
+          textoConfirmar: "Retirar observación",
+          textoCancelar: "Cancelar",
+        });
+        if (!seguro) return;
         const boton = formRetirar.querySelector('button[type="submit"]');
         const original = ocuparBoton(boton, "Retirando…");
         try {
