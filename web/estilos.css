@@ -241,6 +241,12 @@ a:focus-visible,
   font-family: var(--sans);
 }
 
+.leaflet-interactive {
+  /* El navegador dibuja un recuadro de foco (el "hitbox") sobre el path SVG
+     al hacer clic en un municipio — no tiene relación con su forma real. */
+  outline: none;
+}
+
 .mapa-capas {
   position: absolute;
   top: 12px;

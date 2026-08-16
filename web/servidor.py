@@ -58,6 +58,8 @@ from reportes.confianza import (  # noqa: E402
     senalar_reporte,
 )
 from reportes.territorio import municipio_en_punto  # noqa: E402
+from reportes.ia import evaluar_riesgo, sugerir_categoria  # noqa: E402
+from relaciones.ia import explicar_relacion  # noqa: E402
 
 WEB = Path(__file__).resolve().parent
 
@@ -297,6 +299,18 @@ def api_territorio():
     return jsonify({"dane": hallado["dane"], "nombre": nombre})
 
 
+@app.post("/api/ia/sugerir-categoria")
+def api_sugerir_categoria():
+    """Sugerencia opcional para el formulario de Reportar. El ciudadano
+    sigue eligiendo la categoría final; esto nunca se aplica solo."""
+    cuerpo = request.get_json(silent=True) or {}
+    descripcion = str(cuerpo.get("descripcion") or "")
+    sugerencia = sugerir_categoria(descripcion)
+    if sugerencia is None:
+        return jsonify({"disponible": False})
+    return jsonify({"disponible": True, **sugerencia})
+
+
 @app.post("/api/reportes")
 def api_crear_reporte():
     if request.files or (request.content_type or "").startswith("multipart/"):
@@ -356,6 +370,25 @@ def api_confianza(reporte_id: str):
     if hallado is None:
         return jsonify({"error": "reporte no encontrado"}), 404
     return jsonify(hallado.get("confianza") or explicar_estado(hallado, eventos=[]))
+
+
+@app.post("/api/reportes/<reporte_id>/evaluar-ia")
+def api_evaluar_riesgo_reporte(reporte_id: str):
+    """Pista de prioridad para quien modera. No aprueba ni rechaza nada;
+    la decisión y su motivo los sigue escribiendo la persona."""
+    if not _moderacion_autorizada():
+        return _respuesta_no_autorizada()
+    try:
+        datos = ensamblar_datos()
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
+    hallado = datos["reportes"].get(reporte_id)
+    if hallado is None:
+        return jsonify({"error": "reporte no encontrado"}), 404
+    evaluacion = evaluar_riesgo(hallado.get("descripcion") or "")
+    if evaluacion is None:
+        return jsonify({"disponible": False})
+    return jsonify({"disponible": True, **evaluacion})
 
 
 @app.post("/api/reportes/<reporte_id>/revisar")
@@ -434,6 +467,36 @@ def api_relacion_directa():
     except (RelacionError, ModeloInvalido, FileNotFoundError) as exc:
         return jsonify({"error": str(exc)}), 400
     return jsonify(creado), 201
+
+
+@app.post("/api/relaciones/<rel_id>/explicar-ia")
+def api_explicar_relacion_ia(rel_id: str):
+    """Traduce a lenguaje llano una conexión que las reglas ya sugirieron.
+    No puede sugerir una conexión nueva ni cambiar su estado o confianza —
+    eso lo sigue decidiendo únicamente relaciones/motor.py."""
+    try:
+        datos = ensamblar_datos()
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
+    rel = next((r for r in datos["relaciones"] if r["id"] == rel_id), None)
+    if rel is None:
+        return jsonify({"error": "relación no encontrada"}), 404
+    extremos = (rel["origen"], rel["destino"])
+    id_reporte = next((e["id"] for e in extremos if e["tipo"] == "reporte"), None)
+    id_contrato = next((e["id"] for e in extremos if e["tipo"] == "contrato"), None)
+    reporte_obj = datos["reportes"].get(id_reporte) if id_reporte else None
+    contrato_obj = datos["contratos"].get(id_contrato) if id_contrato else None
+    if not reporte_obj or not contrato_obj:
+        return jsonify({"error": "reporte o contrato no encontrado"}), 404
+    explicacion = explicar_relacion(
+        reporte=reporte_obj,
+        contrato=contrato_obj,
+        senales=rel.get("senales") or [],
+        evidencia_reglas=rel.get("evidencia") or "",
+    )
+    if explicacion is None:
+        return jsonify({"disponible": False})
+    return jsonify({"disponible": True, "explicacion": explicacion})
 
 
 @app.post("/api/relaciones/<rel_id>/revisar")

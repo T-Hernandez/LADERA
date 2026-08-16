@@ -372,7 +372,7 @@
     }
     if (seleccionado) {
       color = "#d97706";
-      weight = 3;
+      weight = 4;
     }
     return { fillColor: fill, color, weight, fillOpacity: 0.86 };
   };
@@ -597,12 +597,18 @@
 
   const explicacionConexion = (rel) => {
     const items = (rel.senales || []).map((s) => `<li>✓ ${escapeHtml(SENAL_ETIQUETA[s] || s)}</li>`).join("");
+    const botonIa =
+      rel.estado === "SUGERIDA"
+        ? `<p><button type="button" class="secundario" data-explicar-ia="${escapeHtml(rel.id)}">Explicar con IA en lenguaje sencillo</button></p>
+           <div id="explicacion-ia-${escapeHtml(rel.id)}"></div>`
+        : "";
     return `
       <div class="conexion-porque">
         <p class="muted">${escapeHtml(CONEXION_SIGNIFICADO[rel.estado] || "")}</p>
         <p class="muted">¿Por qué LADERA propone esta conexión?</p>
         ${items ? `<ul class="lista-senales">${items}</ul>` : ""}
         <p class="muted">${escapeHtml(rel.evidencia)}</p>
+        ${botonIa}
       </div>
     `;
   };
@@ -920,9 +926,11 @@
       </form>`;
     return `
       ${senalar}
+      <p><button type="button" class="secundario" data-evaluar-riesgo="${escapeHtml(r.id)}">Evaluar prioridad con IA</button></p>
+      <div id="riesgo-ia-${escapeHtml(r.id)}"></div>
       <form class="reporte" id="form-revisar-reporte">
         <p class="paso">Revisión local</p>
-        <p class="muted">Verificar no declara irregularidad ni da el reporte por verdadero. La IA no puede verificar.</p>
+        <p class="muted">Verificar no declara irregularidad ni da el reporte por verdadero. La IA no puede verificar, solo puede sugerir qué tan urgente es revisar esto.</p>
         <label>Nuevo estado
           <select name="estado" required>${destinos}</select>
         </label>
@@ -957,10 +965,12 @@
       <form class="reporte" id="form-reporte">
         <p class="paso">Qué observaste</p>
         <label>Descripción
-          <textarea name="descripcion" required maxlength="1200" placeholder="¿Qué viste en el territorio?">${escapeHtml(b.descripcion || "")}</textarea>
+          <textarea name="descripcion" id="campo-descripcion" required maxlength="1200" placeholder="¿Qué viste en el territorio?">${escapeHtml(b.descripcion || "")}</textarea>
         </label>
+        <p><button type="button" class="secundario" id="sugerir-categoria-ia">Sugerir categoría con IA</button></p>
+        <p id="sugerencia-categoria-ia" class="muted" hidden></p>
         <label>Categoría
-          <select name="categoria" required>${cats}</select>
+          <select name="categoria" id="campo-categoria" required>${cats}</select>
         </label>
         <p class="paso">Dónde</p>
         <p class="punto-estado" id="punto-estado">${escapeHtml(textoPunto(estado.puntoReporte))}</p>
@@ -1165,6 +1175,44 @@
         if (selectReportarMun.value) {
           estado.zonaDane = selectReportarMun.value;
           centrarZona(selectReportarMun.value);
+        }
+      });
+    }
+
+    const botonSugerirCategoria = document.getElementById("sugerir-categoria-ia");
+    if (botonSugerirCategoria) {
+      botonSugerirCategoria.addEventListener("click", async () => {
+        const descripcion = (document.getElementById("campo-descripcion") || {}).value || "";
+        const aviso = document.getElementById("sugerencia-categoria-ia");
+        if (descripcion.trim().length < 15) {
+          if (aviso) {
+            aviso.hidden = false;
+            aviso.textContent = "Escribe un poco más la descripción antes de pedir una sugerencia.";
+          }
+          return;
+        }
+        const original = ocuparBoton(botonSugerirCategoria, "Pensando…");
+        try {
+          const res = await fetch("/api/ia/sugerir-categoria", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ descripcion }),
+          });
+          const cuerpo = await res.json();
+          if (!aviso) return;
+          aviso.hidden = false;
+          if (cuerpo.disponible) {
+            const select = document.getElementById("campo-categoria");
+            if (select) {
+              select.value = cuerpo.categoria;
+              estado.borrador.categoria = cuerpo.categoria;
+            }
+            aviso.textContent = `Sugerencia aplicada: ${categorias[cuerpo.categoria] || cuerpo.categoria}. ${cuerpo.motivo} Puedes cambiarla si no es correcta.`;
+          } else {
+            aviso.textContent = "La IA no está disponible ahora mismo. Elige la categoría que mejor describa lo que viste.";
+          }
+        } finally {
+          liberarBoton(botonSugerirCategoria, original);
         }
       });
     }
@@ -1483,6 +1531,49 @@
       estado.datos = await (await fetch("/api/datos")).json();
       await cargarRecorte();
       renderPanel();
+      return;
+    }
+    const explicarIa = ev.target.closest("[data-explicar-ia]");
+    if (explicarIa && $panel.contains(explicarIa)) {
+      const id = explicarIa.dataset.explicarIa;
+      const contenedor = document.getElementById(`explicacion-ia-${id}`);
+      const original = ocuparBoton(explicarIa, "Pensando…");
+      try {
+        const res = await fetch(`/api/relaciones/${encodeURIComponent(id)}/explicar-ia`, { method: "POST" });
+        const cuerpo = await res.json();
+        if (contenedor) {
+          contenedor.innerHTML = cuerpo.disponible
+            ? `<p class="muted">${escapeHtml(cuerpo.explicacion)}</p>`
+            : `<p class="muted">La IA no está disponible ahora mismo. La explicación por reglas de arriba sigue siendo válida.</p>`;
+        }
+        explicarIa.remove();
+      } catch (_err) {
+        if (contenedor) contenedor.innerHTML = `<p class="muted">No se pudo consultar la IA.</p>`;
+        liberarBoton(explicarIa, original);
+      }
+      return;
+    }
+    const evaluarRiesgo = ev.target.closest("[data-evaluar-riesgo]");
+    if (evaluarRiesgo && $panel.contains(evaluarRiesgo)) {
+      const id = evaluarRiesgo.dataset.evaluarRiesgo;
+      const contenedor = document.getElementById(`riesgo-ia-${id}`);
+      const original = ocuparBoton(evaluarRiesgo, "Evaluando…");
+      try {
+        const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/evaluar-ia`, {
+          method: "POST",
+          headers: { "X-Moderacion-Token": estado.moderacionToken || "" },
+        });
+        const cuerpo = await res.json();
+        if (!res.ok) {
+          if (contenedor) contenedor.innerHTML = `<p class="muted">${escapeHtml(cuerpo.error || "necesitas el token de moderación")}</p>`;
+        } else if (contenedor) {
+          contenedor.innerHTML = cuerpo.disponible
+            ? `<p class="muted">Prioridad sugerida: <strong>${escapeHtml(cuerpo.nivel)}</strong>. ${escapeHtml(cuerpo.motivo)} — sigue siendo tu decisión, no la de la IA.</p>`
+            : `<p class="muted">La IA no está disponible ahora mismo.</p>`;
+        }
+      } finally {
+        liberarBoton(evaluarRiesgo, original);
+      }
       return;
     }
     const boton = ev.target.closest("[data-abrir]");
