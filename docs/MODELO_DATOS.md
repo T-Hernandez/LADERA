@@ -1,4 +1,6 @@
-# Modelo de datos — Fase 1
+# Modelo de datos
+
+Implementado en `modelo/`. El frontend consume el JSON ya validado; no recalcula.
 
 Este es el contrato que consume el frontend. Cambiar un campo aquí implica
 cambiar `datos.json` y la interfaz. No al revés.

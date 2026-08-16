@@ -2,7 +2,7 @@
 
 Plataforma de trazabilidad ciudadana: un registro de lo que las personas observan en el territorio, al lado de la contratación pública que normalmente es difícil de recorrer.
 
-Esta versión es la **Fase 1**: mapa real de los 125 municipios de Antioquia y un fixture de contratos y reportes. Todavía no se descarga SECOP.
+Esta versión cubre la **Fase 1** (mapa + fixture) y la **Fase 2** (modelo y trazabilidad). Todavía no se descarga SECOP.
 
 ## Cómo correrlo
 
@@ -17,6 +17,10 @@ python web\servidor.py
 ```
 
 Abre [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+```powershell
+python -m unittest tests.test_modelo
+```
 
 ## Qué probar
 
@@ -35,5 +39,6 @@ Abre [http://127.0.0.1:5000](http://127.0.0.1:5000).
 | Llave DANE | `municipios_lookup.json` |
 | Fixture | `data/fixtures/datos.json` |
 | Contrato de campos | `docs/MODELO_DATOS.md` |
+| Validación | `modelo/` |
 
 Los contratos reales, cuando existan, salen de SECOP vía datos.gov.co (`jbjy-vk9h`). El enlace de cada hallazgo es el campo `URLProceso`, no una URL inventada.

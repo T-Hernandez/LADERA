@@ -37,3 +37,13 @@
 **Decisión:** el primer mapa es Antioquia. La llave es el código DANE.
 
 **Motivo:** ya existen el GeoJSON recortado y el diccionario de municipios.
+
+## 2026-08-15 — El modelo vive en `modelo/`, no en una base de datos
+
+**Decisión:** la Fase 2 es un paquete Python que construye y valida entidades. El intercambio sigue siendo `datos.json`.
+
+**Motivo:** todavía no hay ingesta real. Una base de datos ahora mezclaría persistencia con reglas.
+
+**Impacto:** `construir_fixture.py` y `web/servidor.py` no escriben diccionarios a mano. Si el dato no pasa el modelo, no se sirve.
+
+**Descartado:** confirmar una relación solo porque la IA la afirmó.

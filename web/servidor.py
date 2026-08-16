@@ -1,4 +1,4 @@
-"""Sirve la interfaz de la Fase 1 y el JSON canónico."""
+"""Sirve la interfaz. El JSON canónico pasa por el modelo de la Fase 2."""
 
 from __future__ import annotations
 
@@ -21,16 +21,9 @@ from config import (  # noqa: E402
     PUERTO,
     REPORTES_LOCALES,
 )
+from modelo import ModeloInvalido, reporte, validar_conjunto  # noqa: E402
 
 WEB = Path(__file__).resolve().parent
-CATEGORIAS = {
-    "OBRA_INCONCLUSA",
-    "OBRA_DETERIORADA",
-    "OBRA_NO_VISIBLE",
-    "PROBLEMA_PERSISTENTE",
-    "RIESGO",
-    "OTRO",
-}
 
 app = Flask(__name__, static_folder=str(WEB), static_url_path="")
 
@@ -55,38 +48,23 @@ def ensamblar_datos() -> dict:
 
     lookup = _leer_json(LOOKUP_MUNICIPIOS, {})
     por_dane = {item["dane"]: item for item in lookup.values()}
+    validos = set(por_dane)
 
-    for reporte in _reportes_locales():
-        rid = reporte["id"]
-        datos["reportes"][rid] = reporte
-        dane = reporte["ubicacion"]["dane"]
-        mun = datos["municipios"].get(dane)
-        if mun is None:
-            extra = por_dane.get(dane, {"nombre": dane, "dane": dane})
-            mun = {
-                "nombre": extra["nombre"],
-                "dane": dane,
-                "contratos": 0,
-                "reportes": 0,
-                "plata_total": 0,
-                "contrato_ids": [],
-                "reporte_ids": [],
-            }
-            datos["municipios"][dane] = mun
-        if rid not in mun["reporte_ids"]:
-            mun["reporte_ids"].append(rid)
-        mun["reportes"] = len(mun["reporte_ids"])
+    for crudo in _reportes_locales():
+        datos["reportes"][crudo["id"]] = reporte(
+            id=crudo["id"],
+            fecha_creacion=crudo["fecha_creacion"],
+            fecha_observacion=crudo["fecha_observacion"],
+            descripcion=crudo["descripcion"],
+            categoria=crudo["categoria"],
+            estado=crudo["estado"],
+            autor=crudo["autor"],
+            ubicacion=crudo["ubicacion"],
+            evidencias=crudo.get("evidencias"),
+            municipios_validos=validos,
+        )
 
-    datos["resumen"]["contratos"] = len(datos["contratos"])
-    datos["resumen"]["reportes"] = len(datos["reportes"])
-    datos["resumen"]["relaciones"] = len(datos["relaciones"])
-    datos["resumen"]["municipios_con_contratos"] = sum(
-        1 for m in datos["municipios"].values() if m["contratos"] > 0
-    )
-    datos["resumen"]["municipios_con_reportes"] = sum(
-        1 for m in datos["municipios"].values() if m["reportes"] > 0
-    )
-    return datos
+    return validar_conjunto(datos)
 
 
 @app.get("/")
@@ -96,58 +74,53 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 1})
+    return jsonify({"ok": True, "fase": 2})
 
 
 @app.get("/api/datos")
 def api_datos():
-    return jsonify(ensamblar_datos())
+    try:
+        return jsonify(ensamblar_datos())
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
 
 
 @app.post("/api/reportes")
 def api_crear_reporte():
     cuerpo = request.get_json(silent=True) or {}
-    descripcion = str(cuerpo.get("descripcion") or "").strip()
-    categoria = str(cuerpo.get("categoria") or "").strip()
-    dane = str(cuerpo.get("dane") or "").strip()
-    fecha_obs = str(cuerpo.get("fecha_observacion") or "").strip()
-    autor = str(cuerpo.get("autor") or "ciudadano (local)").strip()
-    detalle = str(cuerpo.get("detalle") or "").strip()
-
-    if not descripcion or categoria not in CATEGORIAS or not dane or not fecha_obs:
-        return jsonify({"error": "Faltan campos obligatorios o la categoría no es válida."}), 400
-
     lookup = _leer_json(LOOKUP_MUNICIPIOS, {})
     por_dane = {item["dane"]: item for item in lookup.values()}
-    if dane not in por_dane:
-        return jsonify({"error": "El municipio no está en el piloto de Antioquia."}), 400
-
-    reporte = {
-        "id": f"REP-L-{uuid.uuid4().hex[:8]}",
-        "fecha_creacion": datetime.now(timezone.utc).isoformat(),
-        "fecha_observacion": fecha_obs,
-        "descripcion": descripcion,
-        "categoria": categoria,
-        "estado": "PUBLICADO",
-        "autor": autor,
-        "ubicacion": {
-            "dane": dane,
-            "nombre": por_dane[dane]["nombre"],
-            "detalle": detalle or None,
-            "lat": None,
-            "lng": None,
-        },
-        "evidencias": [],
-    }
+    dane = str(cuerpo.get("dane") or "").strip()
+    try:
+        creado = reporte(
+            id=f"REP-L-{uuid.uuid4().hex[:8]}",
+            fecha_creacion=datetime.now(timezone.utc).isoformat(),
+            fecha_observacion=str(cuerpo.get("fecha_observacion") or "").strip(),
+            descripcion=str(cuerpo.get("descripcion") or "").strip(),
+            categoria=str(cuerpo.get("categoria") or "").strip(),
+            estado="PUBLICADO",
+            autor=str(cuerpo.get("autor") or "ciudadano (local)").strip() or "ciudadano (local)",
+            ubicacion={
+                "dane": dane,
+                "nombre": por_dane.get(dane, {}).get("nombre") or dane,
+                "detalle": str(cuerpo.get("detalle") or "").strip() or None,
+                "lat": None,
+                "lng": None,
+            },
+            evidencias=[],
+            municipios_validos=set(por_dane),
+        )
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 400
 
     REPORTES_LOCALES.parent.mkdir(parents=True, exist_ok=True)
     actuales = _reportes_locales()
-    actuales.append(reporte)
+    actuales.append(creado)
     REPORTES_LOCALES.write_text(
         json.dumps(actuales, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    return jsonify(reporte), 201
+    return jsonify(creado), 201
 
 
 @app.get("/assets/municipios_antioquia.geojson")

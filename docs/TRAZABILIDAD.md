@@ -1,4 +1,6 @@
-# Trazabilidad — Fase 1
+# Trazabilidad
+
+Las reglas de abajo las aplica `modelo.validar_conjunto` antes de escribir o servir `datos.json`.
 
 Cada afirmación visible debe poder recorrer el camino inverso.
 

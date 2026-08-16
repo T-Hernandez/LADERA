@@ -1,16 +1,17 @@
 {
   "resumen": {
     "territorio": "Antioquia",
+    "fuente": "fixture",
+    "nota": "Datos ficticios para construir la interfaz. No son contratos ni reportes reales.",
     "municipios": 125,
-    "municipios_con_contratos": 2,
-    "municipios_con_reportes": 2,
     "contratos": 3,
     "contratos_con_cifra": 2,
     "plata_total": 3290000000,
     "reportes": 2,
     "relaciones": 1,
-    "fuente": "fixture",
-    "nota": "Datos ficticios para construir la interfaz. No son contratos ni reportes reales."
+    "municipios_con_contratos": 2,
+    "municipios_sin_contratos": 123,
+    "municipios_con_reportes": 2
   },
   "municipios": {
     "05001": {
