@@ -167,24 +167,18 @@
     },
   };
 
-  // TEMPORAL, solo para pruebas: fuerza a que el popup de cada pestaña se
-  // muestre en cada recarga en vez de solo la primera vez. Volver a false
-  // para restaurar el comportamiento normal (una vez por navegador).
-  const FORZAR_INTRO_SIEMPRE = true;
-
+  // TEMPORAL, solo para pruebas: se muestra una vez por pestaña en cada
+  // recarga de página (no queda guardado entre recargas). Dentro de la misma
+  // carga, cambiar de municipio dentro de Zona no lo vuelve a mostrar.
+  // Cuando termines de probar, esto debe volver a usar localStorage para que
+  // sea una sola vez por navegador (no una vez por recarga).
+  const introMostradaEnSesion = new Set();
   const $introPestana = document.getElementById("intro-pestana");
   const mostrarIntroSiPrimeraVez = (vista) => {
     const info = INTRO_PESTANA[vista];
     if (!info || !$introPestana) return;
-    const clave = `ladera_intro_${vista}`;
-    if (!FORZAR_INTRO_SIEMPRE) {
-      try {
-        if (localStorage.getItem(clave)) return;
-        localStorage.setItem(clave, "1");
-      } catch (_err) {
-        // almacenamiento no disponible (ej. navegación privada): se muestra igual, sin recordar
-      }
-    }
+    if (introMostradaEnSesion.has(vista)) return;
+    introMostradaEnSesion.add(vista);
     document.getElementById("intro-titulo").textContent = info.titulo;
     document.getElementById("intro-texto").textContent = info.texto;
     $introPestana.hidden = false;
