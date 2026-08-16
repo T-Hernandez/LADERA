@@ -1280,7 +1280,12 @@
       "estado": "SUGERIDA",
       "evidencia": "Mismo municipio (Medellín) y el reporte describe un muro inconcluso en El Popular, lugar citado en el objeto del contrato FIX-X.",
       "creado_en": "2026-06-18T10:20:00-05:00",
-      "revisado_en": null
+      "revisado_en": null,
+      "senales": [
+        "SEMANTICA",
+        "TERRITORIAL"
+      ],
+      "motivo_revision": null
     }
   ]
 }

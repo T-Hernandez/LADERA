@@ -17,7 +17,6 @@
     avisoZona: null,
     moderacionToken: "",
     q: "",
-    usarIa: false,
     hilo: null,
     piloto: null,
     escala: null,
@@ -105,6 +104,48 @@
       btnCancelar.addEventListener("click", onCancelar);
       $dialogo.addEventListener("cancel", onCancelar);
       $dialogo.showModal();
+    });
+
+  const $dialogoMotivo = document.getElementById("dialogo-motivo");
+  const pedirMotivo = ({ titulo = "", texto = "", textoOk = "Confirmar" } = {}) =>
+    new Promise((resolve) => {
+      if (!$dialogoMotivo || typeof $dialogoMotivo.showModal !== "function") {
+        const valor = window.prompt(texto || titulo);
+        resolve(valor && valor.trim().length >= 10 ? valor.trim() : null);
+        return;
+      }
+      $dialogoMotivo.querySelector("#dialogo-motivo-titulo").textContent = titulo;
+      $dialogoMotivo.querySelector("#dialogo-motivo-texto").textContent = texto;
+      const campo = $dialogoMotivo.querySelector("#dialogo-motivo-campo");
+      campo.value = "";
+      const btnOk = $dialogoMotivo.querySelector("#dialogo-motivo-ok");
+      const btnCancelar = $dialogoMotivo.querySelector("#dialogo-motivo-cancelar");
+      btnOk.textContent = textoOk;
+      const limpiar = () => {
+        btnOk.removeEventListener("click", onOk);
+        btnCancelar.removeEventListener("click", onCancelar);
+        $dialogoMotivo.removeEventListener("cancel", onCancelar);
+      };
+      const onOk = () => {
+        const valor = campo.value.trim();
+        if (valor.length < 10) {
+          campo.focus();
+          return;
+        }
+        limpiar();
+        $dialogoMotivo.close();
+        resolve(valor);
+      };
+      const onCancelar = (ev) => {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        limpiar();
+        $dialogoMotivo.close();
+        resolve(null);
+      };
+      btnOk.addEventListener("click", onOk);
+      btnCancelar.addEventListener("click", onCancelar);
+      $dialogoMotivo.addEventListener("cancel", onCancelar);
+      $dialogoMotivo.showModal();
     });
 
   const plata = (n) => {
@@ -213,7 +254,6 @@
         </div>
         <p class="aviso">${escapeHtml(p.nota)}</p>
       </section>
-      ${htmlEscala()}
     `;
   };
 
@@ -231,7 +271,7 @@
       .map(([k, v]) => `<li>${v.ok ? "sí" : "no"} · ${escapeHtml(k)}: ${escapeHtml(v.evidencia)}</li>`)
       .join("");
     return `
-      <section class="piloto">
+      <section class="escala">
         <h2>Hasta dónde se puede crecer</h2>
         <p class="muted">Mapa activo: ${escapeHtml(e.mapa_activo)} · ${escapeHtml(e.territorio_activo)}</p>
         <ul class="filtros">${ejes}</ul>
@@ -242,6 +282,14 @@
       </section>
     `;
   };
+
+  const vistaPiloto = () => `
+      <p class="kicker">Información interna del piloto</p>
+      <h1>Cómo va el piloto y hasta dónde puede crecer</h1>
+      <p class="muted">Esto no es una funcionalidad para investigar contratos — es la evaluación interna de si LADERA está funcionando, no cuántas personas la usan.</p>
+      <div class="vista-piloto">${htmlPiloto()}${htmlEscala()}</div>
+      <p><button type="button" class="tarjeta" data-ir="explorar">Volver a Inicio</button></p>
+    `;
 
   const cargarHilo = async () => {
     const q = new URLSearchParams();
@@ -507,17 +555,34 @@
       </button>
     </li>`;
 
+  const SENAL_ETIQUETA = {
+    TERRITORIAL: "Mismo municipio",
+    TEMPORAL: "Periodo relacionado",
+    SEMANTICA: "Tema similar",
+  };
+
   const etiquetaRelacion = (rel) => {
-    if (rel.estado === "CONFIRMADA") return "Relación confirmada";
-    if (rel.estado === "SUGERIDA") return "Posible relación";
-    return "Relación descartada";
+    if (rel.estado === "CONFIRMADA") return "Conexión confirmada";
+    if (rel.estado === "SUGERIDA") return "Posible conexión";
+    return "Conexión descartada";
+  };
+
+  const explicacionConexion = (rel) => {
+    const items = (rel.senales || []).map((s) => `<li>✓ ${escapeHtml(SENAL_ETIQUETA[s] || s)}</li>`).join("");
+    return `
+      <div class="conexion-porque">
+        <p class="muted">¿Por qué LADERA propone esta conexión?</p>
+        ${items ? `<ul class="lista-senales">${items}</ul>` : ""}
+        <p class="muted">${escapeHtml(rel.evidencia)}</p>
+      </div>
+    `;
   };
 
   const accionesRelacion = (rel) => {
     if (rel.estado !== "SUGERIDA") return "";
     return `
       <p class="acciones-rel">
-        <button type="button" class="secundario" data-revisar="${escapeHtml(rel.id)}:CONFIRMADA">Confirmar relación</button>
+        <button type="button" class="secundario" data-revisar="${escapeHtml(rel.id)}:CONFIRMADA">Confirmar conexión</button>
         <button type="button" class="secundario" data-revisar="${escapeHtml(rel.id)}:DESCARTADA">Descartar</button>
       </p>`;
   };
@@ -533,6 +598,8 @@
 
   const vistaExplorar = () => {
     const r = estado.datos.resumen;
+    const esFixture = r.fuente === "fixture";
+    const excluidos = r.contratos_fuera_del_mapa;
     return `
       ${htmlHilo()}
       <p class="kicker">Un solo recorrido</p>
@@ -543,23 +610,33 @@
       </p>
       <form class="buscar" id="form-buscar">
         <input type="search" id="q" value="${escapeHtml(estado.q || "")}" placeholder="¿Qué se contrató aquí?">
-        <button type="submit">Preguntar</button>
+        <button type="submit">Buscar</button>
       </form>
       <div class="cifras">
         <div class="cifra"><b>${r.municipios}</b> municipios</div>
-        <div class="cifra"><b>${r.contratos}</b> contratos (fixture)</div>
+        <div class="cifra"><b>${r.contratos}</b> contratos${esFixture ? " (fixture)" : " (SECOP II)"}</div>
         <div class="cifra"><b>${r.reportes}</b> reportes</div>
         <div class="cifra"><b>${plata(r.plata_total)}</b> con cifra usable</div>
       </div>
+      ${
+        excluidos && excluidos.total > 0
+          ? `<p class="aviso">${excluidos.total} contratos no se muestran en el mapa porque el registro no permite asignarlos responsablemente a un único municipio (varios municipios mencionados a la vez, ambiguos, o sin dato territorial suficiente). No se les asigna un municipio al azar.</p>`
+          : ""
+      }
+      ${
+        esFixture
+          ? `
       <h2>Tres hilos del fixture</h2>
       <ul class="lista">
         <li><button type="button" class="tarjeta" data-recorrido="05001" data-anio="2026" data-pregunta="muro inconcluso en El Popular">El Popular, Medellín — contrato, valor, reporte y una posible relación</button></li>
         <li><button type="button" class="tarjeta" data-recorrido="05088">Bello — hay contratación identificada y nadie ha observado todavía</button></li>
-        <li><button type="button" class="tarjeta" data-recorrido="05361">Ituango — hay un reporte y no hay relación contractual conocida</button></li>
-      </ul>
+        <li><button type="button" class="tarjeta" data-recorrido="05361">Ituango — hay un reporte y no hay posible conexión conocida</button></li>
+      </ul>`
+          : ""
+      }
       <p class="aviso">${escapeHtml(r.nota)}</p>
-      ${htmlPiloto()}
       ${listaConfianza()}
+      <p class="muted"><button type="button" class="tarjeta" data-ir="piloto">Panel del piloto (información interna, no para investigar contratos)</button></p>
     `;
   };
 
@@ -603,8 +680,8 @@
         <div class="cifra"><b>${snap.finalizados || 0}</b> finalizados</div>
         <div class="cifra"><b>${snap.activos || 0}</b> activos</div>
         <div class="cifra"><b>${snap.reportes != null ? snap.reportes : mun.reportes}</b> reportes ciudadanos</div>
-        <div class="cifra"><b>${snap.contratos_relacionados || 0}</b> con relación confirmada</div>
-        <div class="cifra"><b>${snap.relaciones_sugeridas || 0}</b> posibles relaciones</div>
+        <div class="cifra"><b>${snap.contratos_relacionados || 0}</b> con conexión confirmada</div>
+        <div class="cifra"><b>${snap.relaciones_sugeridas || 0}</b> posibles conexiones</div>
         <div class="cifra"><b>${snap.sin_cifra || 0}</b> sin cifra usable</div>
       </div>
       <p class="aviso">${escapeHtml((estado.recorte && estado.recorte.nota) || "Cero contratos identificados no significa cero inversión.")}</p>
@@ -613,7 +690,7 @@
       <h2>${numeroPaso("reportes", 5)}. Reportes existentes</h2>
       ${reportes.length ? `<ul class="lista">${reportes.map(tarjetaReporte).join("")}</ul>` : `<p class="muted">Nadie ha publicado un reporte en este municipio todavía.</p>`}
       <p><button type="button" class="tarjeta" data-ir="reportar">${numeroPaso("evidencia", 6)}. Agregar una observación en ${escapeHtml(mun.nombre)}</button></p>
-      <h2>${numeroPaso("relaciones", 7)}. Relaciones</h2>
+      <h2>${numeroPaso("relaciones", 7)}. Posibles conexiones</h2>
       ${
         relsZona.length
           ? relsZona
@@ -621,14 +698,14 @@
                 const cid = rel.origen.tipo === "contrato" ? rel.origen.id : rel.destino.id;
                 const rid = rel.origen.tipo === "reporte" ? rel.origen.id : rel.destino.id;
                 return `<p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(etiquetaRelacion(rel))}</span></p>
-                  <p class="muted">${escapeHtml(rel.evidencia)}</p>
+                  ${explicacionConexion(rel)}
                   <ul class="lista">${contrato(cid) ? tarjetaContrato(contrato(cid)) : ""}${reporte(rid) ? tarjetaReporte(reporte(rid)) : ""}</ul>
                   ${accionesRelacion(rel)}`;
               })
               .join("")
-          : `<p class="muted">Aún no hay un vínculo registrado. Al agregar evidencia, la plataforma puede sugerir uno. Eso no confirma el reporte.</p>`
+          : `<p class="muted">Aún no hay una posible conexión registrada. Al agregar evidencia, la plataforma puede sugerir una. Eso no confirma el reporte.</p>`
       }
-      <p class="aviso">${numeroPaso("continuar", 8)}. Otra persona puede preguntar de nuevo, señalar un reporte o confirmar una relación desde esta misma zona.</p>
+      <p class="aviso">${numeroPaso("continuar", 8)}. Otra persona puede preguntar de nuevo, señalar un reporte o confirmar una posible conexión desde esta misma zona.</p>
     `;
   };
 
@@ -669,12 +746,12 @@
               .map(
                 ({ rel, rep }) => `
             <p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(etiquetaRelacion(rel))}</span></p>
-            <p class="muted">${escapeHtml(rel.evidencia)}</p>
+            ${explicacionConexion(rel)}
             <ul class="lista">${tarjetaReporte(rep)}</ul>
             ${accionesRelacion(rel)}`
               )
               .join("")
-          : `<p class="muted">No hay una relación registrada con reportes.</p>`
+          : `<p class="muted">No hay una posible conexión registrada con reportes.</p>`
       }
     `;
   };
@@ -721,12 +798,12 @@
               .map(
                 ({ rel, con }) => `
             <p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(etiquetaRelacion(rel))}</span></p>
-            <p class="muted">${escapeHtml(rel.evidencia)}</p>
+            ${explicacionConexion(rel)}
             <ul class="lista">${tarjetaContrato(con)}</ul>
             ${accionesRelacion(rel)}`
               )
               .join("")
-          : `<p class="muted">No hay una relación contractual conocida para este reporte.</p>`
+          : `<p class="muted">No hay una posible conexión con contratación para este reporte.</p>`
       }
       <form class="reporte" id="form-directa">
         <p class="paso">Si conoces el contrato</p>
@@ -863,22 +940,22 @@
   const textoFiltro = (filtros) => {
     if (!filtros) return "";
     const items = [];
-    if (filtros.territorio || filtros.territorio_dane) items.push(`territorio: ${filtros.territorio || filtros.territorio_dane}`);
-    if (filtros.estado_contrato) items.push(`estado: ${filtros.estado_contrato}`);
-    if (filtros.categoria_reporte) items.push(`categoría: ${filtros.categoria_reporte}`);
-    if (filtros.periodo) items.push(`periodo: ${filtros.periodo.desde || "…"} → ${filtros.periodo.hasta || "…"}`);
-    if (filtros.con_reportes) items.push("con reportes");
-    if (filtros.con_relacion) items.push("con relación");
-    if (filtros.texto) items.push(`texto: ${filtros.texto}`);
+    if (filtros.territorio || filtros.territorio_dane) items.push(`Municipio: ${filtros.territorio || filtros.territorio_dane}`);
+    if (filtros.estado_contrato) items.push(`Estado del contrato: ${estadosContrato[filtros.estado_contrato] || filtros.estado_contrato}`);
+    if (filtros.categoria_reporte) items.push(`Tipo de observación: ${categorias[filtros.categoria_reporte] || filtros.categoria_reporte}`);
+    if (filtros.periodo) items.push(`Periodo: ${filtros.periodo.desde || "…"} → ${filtros.periodo.hasta || "…"}`);
+    if (filtros.con_reportes) items.push("Con reportes ciudadanos: sí");
+    if (filtros.con_relacion) items.push("Con posible conexión: sí");
+    if (filtros.texto) items.push(`Texto buscado: «${filtros.texto}»`);
     return items.length
       ? `<ul class="filtros">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`
-      : `<p class="muted">Sin filtros estructurados.</p>`;
+      : `<p class="muted">No se reconoció un filtro específico; se buscó el texto tal cual en el conjunto analizado.</p>`;
   };
 
   const htmlResultadosBusqueda = () => {
     const b = estado.busqueda;
     if (!b) {
-      return `<p class="muted">Pregunta en lenguaje corriente. No hace falta conocer el nombre del campo en SECOP.</p>`;
+      return `<p class="muted">Escribe una pregunta en lenguaje corriente. No hace falta conocer el nombre del campo en SECOP.</p>`;
     }
     const contratos = b.contratos || [];
     const reportes = b.reportes || [];
@@ -890,12 +967,13 @@
         return `<li>${escapeHtml(f.tipo)} ${escapeHtml(f.id)} · ${escapeHtml(f.fuente || "")}</li>`;
       })
       .join("");
+    const metodo = (b.interpretacion && b.interpretacion.metodo) || "";
     return `
       ${estado.avisoZona ? `<p class="aviso">${escapeHtml(estado.avisoZona)}</p>` : ""}
+      <h2>LADERA entendió</h2>
       <p class="muted">${escapeHtml((b.interpretacion && b.interpretacion.explicacion) || "")}</p>
-      <p class="muted">Método: ${escapeHtml((b.interpretacion && b.interpretacion.metodo) || "")} · IA: ${escapeHtml((b.interpretacion && b.interpretacion.ia) || "apagada")}</p>
-      <h2>Filtros</h2>
       ${textoFiltro(b.filtros)}
+      ${metodo === "IA" ? `<p class="muted">Interpretado con ayuda de inteligencia artificial; el backend ejecutó la consulta, la IA no respondió directamente.</p>` : ""}
       <h2>Contratos (${contratos.length})</h2>
       ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">No se encontraron contratos identificados en el conjunto analizado que coincidan con esta pregunta.</p>`}
       <h2>Reportes (${reportes.length})</h2>
@@ -915,15 +993,14 @@
 
   const vistaBuscar = () => `
       ${htmlHilo()}
-      <p class="kicker">Preguntar en el mismo hilo</p>
-      <h1>De la pregunta a la zona</h1>
-      <p class="muted">La pregunta se convierte en filtros. El conjunto analizado responde. Si hay una zona abierta, «esta zona» la usa. La IA, si está apagada, no hace falta.</p>
+      <p class="kicker">Buscar con lenguaje natural</p>
+      <h1>Escribe lo que quieres saber, con tus propias palabras</h1>
+      <p class="muted">Por ejemplo: «contratos activos de vías en Medellín que tengan reportes ciudadanos». No hace falta conocer los nombres técnicos de SECOP — LADERA lo convierte en filtros y te muestra exactamente qué entendió antes de buscar.</p>
       <form class="buscar" id="form-buscar">
-        <input type="search" id="q" value="${escapeHtml(estado.q || "")}" placeholder="¿Qué se contrató aquí?">
-        <label class="ia-toggle"><input type="checkbox" name="usar_ia" ${estado.usarIa ? "checked" : ""}> Interpretar con IA (si no hay clave, se usan reglas)</label>
+        <input type="search" id="q" value="${escapeHtml(estado.q || "")}" placeholder="¿Qué quieres investigar?">
         <button type="submit">Buscar</button>
       </form>
-      <p class="muted">Ejemplos del plan:</p>
+      <p class="muted">Ejemplos:</p>
       <ul class="lista">
         <li><button type="button" class="tarjeta" data-pregunta="Muéstrame contratos que terminaron el año pasado y tienen reportes de obras inconclusas">Contratos que terminaron el año pasado con reportes de obras inconclusas</button></li>
         <li><button type="button" class="tarjeta" data-pregunta="¿Qué contratos hay relacionados con esta zona?">Contratos relacionados con esta zona</button></li>
@@ -961,8 +1038,6 @@
   };
 
   const lanzarBusqueda = async (pregunta) => {
-    const cajaIa = document.querySelector('#form-buscar input[name="usar_ia"]');
-    if (cajaIa) estado.usarIa = cajaIa.checked;
     estado.q = pregunta;
     estado.vista = "buscar";
     marcarNav();
@@ -972,7 +1047,7 @@
       body: JSON.stringify({
         pregunta,
         dane: estado.zonaDane,
-        usar_ia: !!estado.usarIa,
+        usar_ia: true,
         sesion: estado.sesion,
       }),
     });
@@ -1184,8 +1259,6 @@
       }
       formBuscar.addEventListener("submit", async (ev) => {
         ev.preventDefault();
-        const fd = new FormData(formBuscar);
-        estado.usarIa = fd.get("usar_ia") === "on";
         const pregunta = (document.getElementById("q") || {}).value || "";
         if (!pregunta.trim()) return;
         const boton = formBuscar.querySelector('button[type="submit"]');
@@ -1292,12 +1365,21 @@
     }
     const revisar = ev.target.closest("[data-revisar]");
     if (revisar && $panel.contains(revisar)) {
-      const original = ocuparBoton(revisar, "Guardando…");
       const [id, estadoRel] = revisar.dataset.revisar.split(":");
+      const esConfirmar = estadoRel === "CONFIRMADA";
+      const motivo = await pedirMotivo({
+        titulo: esConfirmar ? "Confirmar conexión" : "Descartar conexión",
+        texto: esConfirmar
+          ? "Confirmar una conexión es un acto humano: no prueba que el contrato sea responsable ni que la obra se haya ejecutado. Explica por qué la confirmas."
+          : "Explica por qué esta conexión no aplica.",
+        textoOk: esConfirmar ? "Confirmar" : "Descartar",
+      });
+      if (motivo == null) return;
+      const original = ocuparBoton(revisar, "Guardando…");
       const res = await fetch(`/api/relaciones/${encodeURIComponent(id)}/revisar`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
-        body: JSON.stringify({ estado: estadoRel }),
+        body: JSON.stringify({ estado: estadoRel, motivo }),
       });
       const cuerpo = await res.json();
       if (!res.ok) {

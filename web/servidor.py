@@ -13,6 +13,7 @@ sys.path.insert(0, str(RAIZ))
 
 from config import (  # noqa: E402
     AUDITORIA_LOCAL,
+    CONSOLIDACION_MANIFIESTO,
     DATOS_FINAL,
     DECISIONES_REPORTES,
     DIR_EVIDENCIAS,
@@ -91,6 +92,20 @@ def _fuente_datos() -> Path:
     return DATOS_FINAL if DATOS_FINAL.exists() else FIXTURE_DATOS
 
 
+def _exclusiones_territorio() -> dict | None:
+    """Cuántos contratos quedaron fuera del mapa por no tener un único municipio. Sale del manifiesto real, no se hardcodea."""
+    manifiesto = _leer_json(CONSOLIDACION_MANIFIESTO, None)
+    if not manifiesto:
+        return None
+    por_motivo = {
+        k: v for k, v in (manifiesto.get("excluidos_por_resolucion") or {}).items() if k != "ID_DUPLICADO"
+    }
+    total = sum(por_motivo.values())
+    if total <= 0:
+        return None
+    return {"total": total, "por_motivo": por_motivo}
+
+
 def ensamblar_datos() -> dict:
     ruta = _fuente_datos()
     datos = _leer_json(ruta, None)
@@ -124,6 +139,7 @@ def ensamblar_datos() -> dict:
         existentes=fixture_rels + locales,
     )
     datos["relaciones"] = fusionar_relaciones(fixture_rels, locales, sugeridas)
+    datos.setdefault("resumen", {})["contratos_fuera_del_mapa"] = _exclusiones_territorio()
     return enriquecer_confianza(validar_conjunto(datos), AUDITORIA_LOCAL)
 
 
@@ -430,9 +446,12 @@ def api_revisar_relacion(rel_id: str):
         revisada = revisar_relacion(
             rel_id,
             str(cuerpo.get("estado") or "").strip(),
+            str(cuerpo.get("motivo") or ""),
             datos["relaciones"],
             datos,
             ruta=RELACIONES_LOCALES,
+            actor=_actor_pedido(cuerpo),
+            ruta_auditoria=AUDITORIA_LOCAL,
         )
     except RelacionError as exc:
         return jsonify({"error": str(exc)}), 400

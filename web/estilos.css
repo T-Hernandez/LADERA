@@ -62,6 +62,26 @@ html, body {
 
 .moderacion {
   margin-left: auto;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.moderacion summary {
+  cursor: pointer;
+  color: var(--muted);
+  list-style: none;
+}
+
+.moderacion summary::-webkit-details-marker {
+  display: none;
+}
+
+.moderacion summary::before {
+  content: "⚙ ";
+}
+
+.moderacion[open] summary {
+  margin-bottom: 6px;
 }
 
 .moderacion label {
@@ -278,6 +298,19 @@ html, body {
 
 .piloto h2 { margin-top: 0; }
 
+.escala {
+  margin: 20px 0 0;
+  padding: 16px 20px;
+  background: var(--panel-alto);
+  border-radius: var(--radio-md);
+}
+
+.escala h2 { margin-top: 0; }
+
+.vista-piloto {
+  margin: 0 0 24px;
+}
+
 .hilo {
   margin: 0 0 24px;
   padding: 16px 20px;
@@ -397,6 +430,20 @@ html, body {
 
 .estado.sugerida { border-color: var(--oro); color: var(--foco); }
 .estado.confirmada { border-color: var(--contrato); color: var(--contrato); }
+
+.conexion-porque {
+  margin: 6px 0 10px;
+}
+
+.lista-senales {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 6px;
+  display: grid;
+  gap: 4px;
+  color: var(--contrato);
+  font-size: var(--fs-sm);
+}
 
 .acciones-rel {
   display: flex;
@@ -605,6 +652,25 @@ form.reporte button,
   color: var(--muted);
   font-size: var(--fs-sm);
   line-height: 1.5;
+}
+
+.dialogo-campo {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 20px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.dialogo-campo textarea {
+  background: var(--papel);
+  color: var(--tinta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-sm);
+  padding: 10px 12px;
+  min-height: 80px;
+  font: inherit;
+  resize: vertical;
 }
 
 .dialogo-acciones {

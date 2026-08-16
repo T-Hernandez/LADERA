@@ -17,14 +17,15 @@
     <nav class="nav" aria-label="Principal">
       <button type="button" data-vista="explorar" class="esta" aria-current="page">Inicio</button>
       <button type="button" data-vista="mapa">Zona</button>
-      <button type="button" data-vista="reportar">Observar</button>
-      <button type="button" data-vista="buscar">Preguntar</button>
+      <button type="button" data-vista="buscar">Buscar</button>
+      <button type="button" data-vista="reportar">Reportar</button>
     </nav>
-    <div class="moderacion">
-      <label>Token de moderación
-        <input type="password" id="token-moderacion" autocomplete="off" placeholder="solo para revisar/retirar">
+    <details class="moderacion">
+      <summary>Modo moderación</summary>
+      <label>Token
+        <input type="password" id="token-moderacion" autocomplete="off" placeholder="solo para revisar/retirar/confirmar">
       </label>
-    </div>
+    </details>
   </header>
 
   <main class="cuerpo">
@@ -71,6 +72,18 @@
     <div class="dialogo-acciones">
       <button type="button" id="dialogo-cancelar" class="secundario"></button>
       <button type="button" id="dialogo-confirmar-btn"></button>
+    </div>
+  </dialog>
+
+  <dialog id="dialogo-motivo" class="dialogo">
+    <h2 id="dialogo-motivo-titulo" class="dialogo-titulo"></h2>
+    <p id="dialogo-motivo-texto" class="dialogo-texto"></p>
+    <label class="dialogo-campo">Motivo
+      <textarea id="dialogo-motivo-campo" minlength="10" maxlength="400" required></textarea>
+    </label>
+    <div class="dialogo-acciones">
+      <button type="button" id="dialogo-motivo-cancelar" class="secundario">Cancelar</button>
+      <button type="button" id="dialogo-motivo-ok"></button>
     </div>
   </dialog>
 

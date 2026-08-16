@@ -159,7 +159,7 @@ class TestAlmacen(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             ruta = Path(tmp) / "rels.json"
             with self.assertRaises(Exception) as ctx:
-                revisar_relacion("REL-IA", "CONFIRMADA", [ia], datos, ruta=ruta)
+                revisar_relacion("REL-IA", "CONFIRMADA", "motivo de prueba con longitud suficiente", [ia], datos, ruta=ruta)
             self.assertIn("IA", str(ctx.exception))
 
 
@@ -187,7 +187,7 @@ class TestApi(unittest.TestCase):
         self.assertEqual(rel["estado"], "SUGERIDA")
         res = self.client.post(
             "/api/relaciones/REL-1/revisar",
-            json={"estado": "CONFIRMADA"},
+            json={"estado": "CONFIRMADA", "motivo": "la observación coincide con la obra descrita en el contrato"},
             headers={"X-Moderacion-Token": "token-de-prueba"},
         )
         self.assertEqual(res.status_code, 200, res.get_data(as_text=True))
@@ -196,6 +196,27 @@ class TestApi(unittest.TestCase):
         otra = self.client.get("/api/datos").get_json()
         rel2 = next(r for r in otra["relaciones"] if r["id"] == "REL-1")
         self.assertEqual(rel2["estado"], "CONFIRMADA")
+
+    def test_confirmar_sin_motivo_rechaza(self):
+        res = self.client.post(
+            "/api/relaciones/REL-1/revisar",
+            json={"estado": "CONFIRMADA"},
+            headers={"X-Moderacion-Token": "token-de-prueba"},
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_confirmar_relacion_deja_auditoria(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ruta_auditoria = Path(tmp) / "auditoria.json"
+            with patch("web.servidor.AUDITORIA_LOCAL", ruta_auditoria):
+                res = self.client.post(
+                    "/api/relaciones/REL-1/revisar",
+                    json={"estado": "CONFIRMADA", "motivo": "coincide con lo observado en el terreno"},
+                    headers={"X-Moderacion-Token": "token-de-prueba"},
+                )
+                self.assertEqual(res.status_code, 200, res.get_data(as_text=True))
+                eventos = json.loads(ruta_auditoria.read_text(encoding="utf-8"))
+                self.assertTrue(any(e["accion"] == "REVISAR_RELACION" and e["objeto"]["id"] == "REL-1" for e in eventos))
 
     def test_revisar_relacion_sin_token_rechaza(self):
         res = self.client.post(

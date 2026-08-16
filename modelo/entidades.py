@@ -11,6 +11,7 @@ from modelo.constantes import (
     ESTADOS_REPORTE,
     FUENTES,
     METODOS_RELACION,
+    SENALES_RELACION,
     TIPOS_EVIDENCIA,
     TIPOS_EXTREMO,
     TIPOS_RELACION,
@@ -234,6 +235,8 @@ def relacion(
     creado_en: str,
     confianza=None,
     revisado_en: str | None = None,
+    senales: list[str] | None = None,
+    motivo_revision: str | None = None,
     ids_contrato: set[str] | None = None,
     ids_reporte: set[str] | None = None,
 ) -> dict:
@@ -246,6 +249,9 @@ def relacion(
     if metodo == "IA" and estado == "CONFIRMADA":
         raise ModeloInvalido("la IA no puede crear una relación CONFIRMADA")
     ev = _texto(evidencia, "evidencia de la relación")
+    for s in senales or []:
+        if s not in SENALES_RELACION:
+            raise ModeloInvalido(f"señal no permitida: {s}")
 
     def extremo(pieza: dict, campo: str) -> dict:
         tipo = pieza.get("tipo")
@@ -276,4 +282,6 @@ def relacion(
         "evidencia": ev,
         "creado_en": _texto(creado_en, "creado_en"),
         "revisado_en": _opcional(revisado_en),
+        "senales": sorted(set(senales or [])),
+        "motivo_revision": _opcional(motivo_revision),
     }

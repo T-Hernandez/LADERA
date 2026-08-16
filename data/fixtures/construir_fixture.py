@@ -180,6 +180,7 @@ def main() -> None:
                 "inconcluso en El Popular, lugar citado en el objeto del contrato FIX-X."
             ),
             creado_en="2026-06-18T10:20:00-05:00",
+            senales=["TERRITORIAL", "SEMANTICA"],
             ids_contrato=set(contratos),
             ids_reporte=set(reportes),
         )

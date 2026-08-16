@@ -6,9 +6,10 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from config import RELACIONES_LOCALES
+from config import AUDITORIA_LOCAL, RELACIONES_LOCALES
 from modelo import ModeloInvalido, relacion
 from relaciones.motor import clave_par
+from reportes.auditoria import registrar
 
 
 class RelacionError(ValueError):
@@ -96,14 +97,20 @@ def registrar_directa(
 def revisar_relacion(
     rel_id: str,
     estado: str,
+    motivo: str,
     actuales: list[dict],
     datos: dict,
     *,
     ruta: Path = RELACIONES_LOCALES,
     ahora: datetime | None = None,
+    actor: str = "moderación local",
+    ruta_auditoria: Path = AUDITORIA_LOCAL,
 ) -> dict:
     if estado not in {"CONFIRMADA", "DESCARTADA"}:
         raise RelacionError("solo se puede confirmar o descartar")
+    motivo = (motivo or "").strip()
+    if len(motivo) < 10:
+        raise RelacionError("explica el motivo de la decisión (mínimo 10 caracteres)")
     hallada = next((r for r in actuales if r["id"] == rel_id), None)
     if hallada is None:
         raise RelacionError("la relación no existe")
@@ -129,6 +136,8 @@ def revisar_relacion(
             creado_en=hallada["creado_en"],
             revisado_en=ahora.isoformat(),
             confianza=hallada.get("confianza"),
+            senales=hallada.get("senales"),
+            motivo_revision=motivo,
             ids_contrato=ids_c,
             ids_reporte=ids_r,
         )
@@ -138,4 +147,13 @@ def revisar_relacion(
     locales = [r for r in leer_relaciones(ruta) if r["id"] != rel_id]
     locales.append(revisada)
     _escribir(locales, ruta)
+    registrar(
+        actor=actor,
+        accion="REVISAR_RELACION",
+        objeto={"tipo": "relacion", "id": rel_id},
+        resultado=estado,
+        motivo=motivo,
+        fecha=ahora,
+        ruta=ruta_auditoria,
+    )
     return revisada

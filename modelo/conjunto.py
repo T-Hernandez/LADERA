@@ -119,6 +119,8 @@ def validar_conjunto(datos: dict, municipios_esperados: int = MUNICIPIOS_ESPERAD
             creado_en=rel["creado_en"],
             confianza=rel.get("confianza"),
             revisado_en=rel.get("revisado_en"),
+            senales=rel.get("senales"),
+            motivo_revision=rel.get("motivo_revision"),
             ids_contrato=ids_c,
             ids_reporte=ids_r,
         )

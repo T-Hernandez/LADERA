@@ -195,6 +195,7 @@ def _a_relacion(candidato: dict, creado_en: str, ids_contrato: set[str], ids_rep
         evidencia=candidato["evidencia"],
         creado_en=creado_en,
         confianza=candidato["score"],
+        senales=candidato["senales"],
         ids_contrato=ids_contrato,
         ids_reporte=ids_reporte,
     )
