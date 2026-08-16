@@ -71,6 +71,18 @@
   const contrato = (id) => estado.datos.contratos[id];
   const reporte = (id) => estado.datos.reportes[id];
 
+  const opcionesMunicipios = (seleccionado) => {
+    const lista = Object.values(estado.datos.municipios).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+    return ['<option value="">Selecciona un municipio…</option>']
+      .concat(
+        lista.map(
+          (m) =>
+            `<option value="${escapeHtml(m.dane)}"${m.dane === seleccionado ? " selected" : ""}>${escapeHtml(m.nombre)}</option>`
+        )
+      )
+      .join("");
+  };
+
   const relacionesDe = (tipo, id) =>
     estado.datos.relaciones.filter(
       (rel) =>
@@ -749,6 +761,11 @@
       <p class="kicker">${numeroPaso("evidencia", 6)}. Agregar evidencia</p>
       <h1>${zona ? `Observar en ${escapeHtml(zona.nombre)}` : "Nueva observación"}</h1>
       <p class="muted">${zona ? `Sigues en ${escapeHtml(zona.nombre)}. ` : ""}No necesitas conocer un contrato. Describe lo que observaste, márcalo en el mapa y, si puedes, adjunta una foto.</p>
+      <div class="zona-elegir">
+        <label>Municipio (ubica el mapa; el punto exacto se marca haciendo clic o arrastrando)
+          <select id="select-municipio-reportar" class="selector-municipio">${opcionesMunicipios(estado.zonaDane || "")}</select>
+        </label>
+      </div>
       <form class="reporte" id="form-reporte">
         <p class="paso">Qué observaste</p>
         <label>Descripción
@@ -916,7 +933,30 @@
     else if (estado.seleccionado?.tipo === "municipio") $panel.innerHTML = vistaMunicipio(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "contrato") $panel.innerHTML = vistaContrato(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "reporte") $panel.innerHTML = vistaReporte(estado.seleccionado.id);
-    else $panel.innerHTML = `${htmlHilo()}<p class="kicker">El mismo territorio</p><h1>Elige una zona</h1><p class="muted">El periodo y las capas recortan este mapa. Ver contratación y reportes en el mismo año no demuestra causa. Al elegir una zona sigues el hilo: contratos, valores, observaciones y relaciones.</p>`;
+    else
+      $panel.innerHTML = `${htmlHilo()}<p class="kicker">El mismo territorio</p><h1>Elige una zona</h1><p class="muted">El periodo y las capas recortan este mapa. Ver contratación y reportes en el mismo año no demuestra causa. Al elegir una zona sigues el hilo: contratos, valores, observaciones y relaciones.</p>
+      <div class="zona-elegir">
+        <label>Municipio (alternativa al mapa)
+          <select id="select-municipio-zona" class="selector-municipio">${opcionesMunicipios("")}</select>
+        </label>
+      </div>`;
+
+    const selectZona = document.getElementById("select-municipio-zona");
+    if (selectZona) {
+      selectZona.addEventListener("change", () => {
+        if (selectZona.value) abrir({ tipo: "municipio", id: selectZona.value });
+      });
+    }
+
+    const selectReportarMun = document.getElementById("select-municipio-reportar");
+    if (selectReportarMun) {
+      selectReportarMun.addEventListener("change", () => {
+        if (selectReportarMun.value) {
+          estado.zonaDane = selectReportarMun.value;
+          centrarZona(selectReportarMun.value);
+        }
+      });
+    }
 
     const form = document.getElementById("form-reporte");
     if (form) {

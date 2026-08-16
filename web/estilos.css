@@ -506,6 +506,32 @@ form.reporte button,
   margin: 4px 0;
 }
 
+.zona-elegir {
+  margin: 16px 0;
+}
+
+.zona-elegir label {
+  display: grid;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.selector-municipio {
+  background: var(--papel);
+  color: var(--tinta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-sm);
+  padding: 10px 12px;
+  min-height: 44px;
+  font: inherit;
+}
+
+.selector-municipio:focus-visible {
+  outline: 2px solid var(--oro);
+  outline-offset: 2px;
+}
+
 .evidencia {
   margin-top: 16px;
   background: var(--panel-alto);
