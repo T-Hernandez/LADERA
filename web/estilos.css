@@ -119,10 +119,15 @@ html, body {
   cursor: pointer;
 }
 
-.nav button.esta,
-.nav button:hover {
+.nav button.esta {
+  background: var(--panel-alto);
   border-color: var(--oro);
   color: var(--foco);
+  font-weight: 600;
+}
+
+.nav button:hover:not(.esta) {
+  border-color: var(--tinta);
 }
 
 .cuerpo {

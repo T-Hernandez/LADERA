@@ -354,7 +354,10 @@
 
   const marcarNav = () => {
     document.querySelectorAll(".nav button").forEach((b) => {
-      b.classList.toggle("esta", b.dataset.vista === estado.vista);
+      const activo = b.dataset.vista === estado.vista;
+      b.classList.toggle("esta", activo);
+      if (activo) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
     });
   };
 
