@@ -8,11 +8,13 @@
     marcas: [],
     puntoReporte: null,
     marcadorBorrador: null,
+    borrador: { descripcion: "", categoria: "", detalle: "", fecha_observacion: "", autor: "" },
     recorte: null,
     capas: { contratos: true, reportes: true, dinero: false },
     filtro: { anio: "", estado: "" },
     zonaDane: null,
     busqueda: null,
+    avisoZona: null,
     q: "",
     usarIa: false,
     hilo: null,
@@ -82,6 +84,21 @@
   };
 
   const snapDe = (dane) => (estado.recorte && estado.recorte.municipios[dane]) || null;
+
+  const numeroPaso = (clave, alt) => {
+    const pasos = (estado.hilo && estado.hilo.pasos) || [];
+    const p = pasos.find((x) => x.clave === clave);
+    return p ? p.id : alt;
+  };
+
+  const hayBorradorConContenido = () => {
+    const texto = (estado.borrador.descripcion || "").trim();
+    return !!(texto || estado.puntoReporte);
+  };
+
+  const vaciarBorrador = () => {
+    estado.borrador = { descripcion: "", categoria: "", detalle: "", fecha_observacion: "", autor: "" };
+  };
 
   const TITULOS_SIGUIENTE = {
     zona: "Elige o pregunta por una zona",
@@ -388,7 +405,16 @@
   };
 
   const irVista = (vista) => {
-    if (estado.vista === "reportar" && vista !== "reportar") quitarMarcadorBorrador();
+    if (estado.vista === "reportar" && vista !== "reportar") {
+      if (hayBorradorConContenido()) {
+        const salir = window.confirm(
+          "Tienes una observación sin enviar. Si sales ahora se pierde lo escrito. ¿Salir de todas formas?"
+        );
+        if (!salir) return;
+      }
+      quitarMarcadorBorrador();
+      vaciarBorrador();
+    }
     estado.vista = vista;
     if (vista === "mapa" && estado.zonaDane) {
       estado.seleccionado = { tipo: "municipio", id: estado.zonaDane };
@@ -509,12 +535,12 @@
         <div class="cifra"><b>${snap.sin_cifra || 0}</b> sin cifra usable</div>
       </div>
       <p class="aviso">${escapeHtml((estado.recorte && estado.recorte.nota) || "Cero contratos identificados no significa cero inversión.")}</p>
-      <h2>3. Contratos en esta zona</h2>
+      <h2>${numeroPaso("contratos", 3)}. Contratos en esta zona</h2>
       ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">Sin contratación identificada en el conjunto analizado. Eso no significa cero inversión.</p>`}
-      <h2>5. Reportes existentes</h2>
+      <h2>${numeroPaso("reportes", 5)}. Reportes existentes</h2>
       ${reportes.length ? `<ul class="lista">${reportes.map(tarjetaReporte).join("")}</ul>` : `<p class="muted">Nadie ha publicado un reporte en este municipio todavía.</p>`}
-      <p><button type="button" class="tarjeta" data-ir="reportar">6. Agregar una observación en ${escapeHtml(mun.nombre)}</button></p>
-      <h2>7. Relaciones</h2>
+      <p><button type="button" class="tarjeta" data-ir="reportar">${numeroPaso("evidencia", 6)}. Agregar una observación en ${escapeHtml(mun.nombre)}</button></p>
+      <h2>${numeroPaso("relaciones", 7)}. Relaciones</h2>
       ${
         relsZona.length
           ? relsZona
@@ -529,7 +555,7 @@
               .join("")
           : `<p class="muted">Aún no hay un vínculo registrado. Al agregar evidencia, la plataforma puede sugerir uno. Eso no confirma el reporte.</p>`
       }
-      <p class="aviso">8. Otra persona puede preguntar de nuevo, señalar un reporte o confirmar una relación desde esta misma zona.</p>
+      <p class="aviso">${numeroPaso("continuar", 8)}. Otra persona puede preguntar de nuevo, señalar un reporte o confirmar una relación desde esta misma zona.</p>
     `;
   };
 
@@ -712,42 +738,43 @@
   };
 
   const vistaReportar = () => {
+    const b = estado.borrador;
     const cats = Object.entries(categorias)
-      .map(([k, v]) => `<option value="${k}">${escapeHtml(v)}</option>`)
+      .map(([k, v]) => `<option value="${k}"${k === b.categoria ? " selected" : ""}>${escapeHtml(v)}</option>`)
       .join("");
     const punto = estado.puntoReporte || {};
     const zona = estado.zonaDane ? municipio(estado.zonaDane) : null;
     return `
       ${htmlHilo()}
-      <p class="kicker">6. Agregar evidencia</p>
+      <p class="kicker">${numeroPaso("evidencia", 6)}. Agregar evidencia</p>
       <h1>${zona ? `Observar en ${escapeHtml(zona.nombre)}` : "Nueva observación"}</h1>
       <p class="muted">${zona ? `Sigues en ${escapeHtml(zona.nombre)}. ` : ""}No necesitas conocer un contrato. Describe lo que observaste, márcalo en el mapa y, si puedes, adjunta una foto.</p>
       <form class="reporte" id="form-reporte">
-        <p class="paso">1. Qué observaste</p>
+        <p class="paso">Qué observaste</p>
         <label>Descripción
-          <textarea name="descripcion" required maxlength="1200" placeholder="¿Qué viste en el territorio?"></textarea>
+          <textarea name="descripcion" required maxlength="1200" placeholder="¿Qué viste en el territorio?">${escapeHtml(b.descripcion || "")}</textarea>
         </label>
         <label>Categoría
           <select name="categoria" required>${cats}</select>
         </label>
-        <p class="paso">2. Dónde</p>
+        <p class="paso">Dónde</p>
         <p class="punto-estado" id="punto-estado">${escapeHtml(textoPunto(estado.puntoReporte))}</p>
         <input type="hidden" name="lat" id="campo-lat" value="${punto.lat != null ? escapeHtml(punto.lat) : ""}">
         <input type="hidden" name="lng" id="campo-lng" value="${punto.lng != null ? escapeHtml(punto.lng) : ""}">
         <label>Lugar más específico (opcional)
-          <input name="detalle" maxlength="160" placeholder="barrio, vereda, vía">
+          <input name="detalle" maxlength="160" placeholder="barrio, vereda, vía" value="${escapeHtml(b.detalle || "")}">
         </label>
-        <p class="paso">3. Cuándo lo observaste</p>
+        <p class="paso">Cuándo lo observaste</p>
         <label>Fecha de la observación
-          <input name="fecha_observacion" type="date" required>
+          <input name="fecha_observacion" type="date" required value="${escapeHtml(b.fecha_observacion || "")}">
         </label>
         <p class="muted">La fecha en que envías el reporte la registra el sistema.</p>
-        <p class="paso">4. Evidencia</p>
+        <p class="paso">Evidencia</p>
         <label>Fotografía (opcional)
           <input name="foto" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
         </label>
         <label>Tu nombre o seudónimo (opcional)
-          <input name="autor" maxlength="80">
+          <input name="autor" maxlength="80" value="${escapeHtml(b.autor || "")}">
         </label>
         <button type="submit">Enviar observación</button>
       </form>
@@ -786,6 +813,7 @@
       })
       .join("");
     return `
+      ${estado.avisoZona ? `<p class="aviso">${escapeHtml(estado.avisoZona)}</p>` : ""}
       <p class="muted">${escapeHtml((b.interpretacion && b.interpretacion.explicacion) || "")}</p>
       <p class="muted">Método: ${escapeHtml((b.interpretacion && b.interpretacion.metodo) || "")} · IA: ${escapeHtml((b.interpretacion && b.interpretacion.ia) || "apagada")}</p>
       <h2>Filtros</h2>
@@ -828,7 +856,15 @@
 
   const aplicarHiloDesdeBusqueda = async (b) => {
     const f = (b && b.filtros) || {};
-    if (f.territorio_dane) estado.zonaDane = f.territorio_dane;
+    estado.avisoZona = null;
+    if (f.territorio_dane && f.territorio_dane !== estado.zonaDane) {
+      const anterior = estado.zonaDane ? municipio(estado.zonaDane) : null;
+      const nueva = municipio(f.territorio_dane);
+      if (anterior && nueva) {
+        estado.avisoZona = `Tu pregunta te movió a ${nueva.nombre}. Antes estabas en ${anterior.nombre}.`;
+      }
+      estado.zonaDane = f.territorio_dane;
+    }
     let recortar = false;
     if (f.periodo && f.periodo.desde && f.periodo.hasta) {
       const y1 = String(f.periodo.desde).slice(0, 4);
@@ -884,6 +920,13 @@
 
     const form = document.getElementById("form-reporte");
     if (form) {
+      ["input", "change"].forEach((evt) =>
+        form.addEventListener(evt, (ev) => {
+          const campo = ev.target;
+          if (!campo.name || campo.name === "foto" || campo.name === "lat" || campo.name === "lng") return;
+          estado.borrador[campo.name] = campo.value;
+        })
+      );
       form.addEventListener("submit", async (ev) => {
         ev.preventDefault();
         if (!estado.puntoReporte || !estado.puntoReporte.dane) {
@@ -900,6 +943,7 @@
           return;
         }
         quitarMarcadorBorrador();
+        vaciarBorrador();
         estado.datos = await (await fetch("/api/datos")).json();
         await cargarRecorte();
         await cargarHilo();
@@ -994,7 +1038,12 @@
     const formBuscar = document.getElementById("form-buscar");
     if (formBuscar) {
       const q = document.getElementById("q");
-      if (q) q.focus();
+      if (q) {
+        q.focus();
+        q.addEventListener("input", () => {
+          estado.q = q.value;
+        });
+      }
       formBuscar.addEventListener("submit", async (ev) => {
         ev.preventDefault();
         const fd = new FormData(formBuscar);

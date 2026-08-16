@@ -53,6 +53,8 @@ CURACION_MANIFIESTO = DIR_METADATA / "curacion_manifest.json"
 RESOLUCION_SALIDA = DIR_INTERIM / "contratos_resueltos.csv"
 RESOLUCION_REPORTE = DIR_FINAL / "reporte_resolucion.txt"
 RESOLUCION_MANIFIESTO = DIR_METADATA / "resolucion_manifest.json"
+DATOS_FINAL = DIR_FINAL / "datos.json"
+CONSOLIDACION_MANIFIESTO = DIR_METADATA / "consolidacion_manifest.json"
 
 # Variantes de ciudad que el lookup no trae con ese texto. No alias cortos ambiguos.
 MUNICIPIO_ALIAS = {

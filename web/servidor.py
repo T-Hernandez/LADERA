@@ -13,6 +13,7 @@ sys.path.insert(0, str(RAIZ))
 
 from config import (  # noqa: E402
     AUDITORIA_LOCAL,
+    DATOS_FINAL,
     DECISIONES_REPORTES,
     DIR_EVIDENCIAS,
     FIXTURE_DATOS,
@@ -84,8 +85,14 @@ def _geojson_municipios() -> dict:
     return _geojson
 
 
+def _fuente_datos() -> Path:
+    """Fase 3-5 real si ya corrió; el fixture solo si todavía no hay datos reales."""
+    return DATOS_FINAL if DATOS_FINAL.exists() else FIXTURE_DATOS
+
+
 def ensamblar_datos() -> dict:
-    datos = _leer_json(FIXTURE_DATOS, None)
+    ruta = _fuente_datos()
+    datos = _leer_json(ruta, None)
     if datos is None:
         raise FileNotFoundError(f"Falta el fixture: {FIXTURE_DATOS}")
 
@@ -435,9 +442,9 @@ def lookup():
 
 
 def main() -> None:
-    if not FIXTURE_DATOS.exists():
+    if not FIXTURE_DATOS.exists() and not DATOS_FINAL.exists():
         raise SystemExit(
-            "No existe data/fixtures/datos.json. "
+            "No existe data/fixtures/datos.json ni data/final/datos.json. "
             "Ejecuta: python data/fixtures/construir_fixture.py"
         )
     app.run(host=HOST, port=PUERTO, debug=False)

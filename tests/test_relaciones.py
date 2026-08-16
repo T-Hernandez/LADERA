@@ -174,6 +174,9 @@ class TestApi(unittest.TestCase):
         p = patch("web.servidor.RELACIONES_LOCALES", self.dir / "relaciones.json")
         p.start()
         self.addCleanup(p.stop)
+        p2 = patch("web.servidor.DATOS_FINAL", self.dir / "no-existe.json")
+        p2.start()
+        self.addCleanup(p2.stop)
 
     def test_confirmar_y_etiqueta(self):
         datos = self.client.get("/api/datos").get_json()

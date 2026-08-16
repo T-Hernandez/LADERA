@@ -91,6 +91,7 @@ class TestApi(unittest.TestCase):
         self.patches = [
             patch("web.servidor.PILOTO_EVENTOS", self.dir / "eventos.json"),
             patch("web.servidor.AUDITORIA_LOCAL", self.dir / "auditoria.json"),
+            patch("web.servidor.DATOS_FINAL", self.dir / "no-existe.json"),
         ]
         for item in self.patches:
             item.start()

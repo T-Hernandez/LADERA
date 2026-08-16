@@ -3,6 +3,7 @@ import sys
 import unittest
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
@@ -116,6 +117,9 @@ class TestApi(unittest.TestCase):
         from web.servidor import app
 
         client = app.test_client()
+        patcher = patch("web.servidor.DATOS_FINAL", Path("no-existe.json"))
+        patcher.start()
+        self.addCleanup(patcher.stop)
         res = client.post("/api/buscar", json={"pregunta": "Popular", "usar_ia": False})
         self.assertEqual(res.status_code, 200, res.get_data(as_text=True))
         cuerpo = res.get_json()

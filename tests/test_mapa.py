@@ -2,6 +2,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
@@ -85,6 +86,9 @@ class TestApi(unittest.TestCase):
         from web.servidor import app
 
         client = app.test_client()
+        patcher = patch("web.servidor.DATOS_FINAL", Path("no-existe.json"))
+        patcher.start()
+        self.addCleanup(patcher.stop)
         res = client.get("/api/mapa?anio=2026")
         self.assertEqual(res.status_code, 200)
         cuerpo = res.get_json()
