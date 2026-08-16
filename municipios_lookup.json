@@ -1,0 +1,502 @@
+{
+ "medellin": {
+  "nombre": "MEDELLÍN",
+  "dane": "05001"
+ },
+ "ciudadbolivar": {
+  "nombre": "CIUDAD BOLÍVAR",
+  "dane": "05101"
+ },
+ "briceno": {
+  "nombre": "BRICEÑO",
+  "dane": "05107"
+ },
+ "buritica": {
+  "nombre": "BURITICÁ",
+  "dane": "05113"
+ },
+ "caceres": {
+  "nombre": "CÁCERES",
+  "dane": "05120"
+ },
+ "betulia": {
+  "nombre": "BETULIA",
+  "dane": "05093"
+ },
+ "betania": {
+  "nombre": "BETANIA",
+  "dane": "05091"
+ },
+ "bello": {
+  "nombre": "BELLO",
+  "dane": "05088"
+ },
+ "belmira": {
+  "nombre": "BELMIRA",
+  "dane": "05086"
+ },
+ "barbosa": {
+  "nombre": "BARBOSA",
+  "dane": "05079"
+ },
+ "armenia": {
+  "nombre": "ARMENIA",
+  "dane": "05059"
+ },
+ "argelia": {
+  "nombre": "ARGELIA",
+  "dane": "05055"
+ },
+ "arboletes": {
+  "nombre": "ARBOLETES",
+  "dane": "05051"
+ },
+ "anza": {
+  "nombre": "ANZÁ",
+  "dane": "05044"
+ },
+ "santafedeantioquia": {
+  "nombre": "SANTA FÉ DE ANTIOQUIA",
+  "dane": "05042"
+ },
+ "anori": {
+  "nombre": "ANORÍ",
+  "dane": "05040"
+ },
+ "angostura": {
+  "nombre": "ANGOSTURA",
+  "dane": "05038"
+ },
+ "angelopolis": {
+  "nombre": "ANGELÓPOLIS",
+  "dane": "05036"
+ },
+ "andes": {
+  "nombre": "ANDES",
+  "dane": "05034"
+ },
+ "amalfi": {
+  "nombre": "AMALFI",
+  "dane": "05031"
+ },
+ "amaga": {
+  "nombre": "AMAGÁ",
+  "dane": "05030"
+ },
+ "alejandria": {
+  "nombre": "ALEJANDRÍA",
+  "dane": "05021"
+ },
+ "abriaqui": {
+  "nombre": "ABRIAQUÍ",
+  "dane": "05004"
+ },
+ "abejorral": {
+  "nombre": "ABEJORRAL",
+  "dane": "05002"
+ },
+ "zaragoza": {
+  "nombre": "ZARAGOZA",
+  "dane": "05895"
+ },
+ "yondo": {
+  "nombre": "YONDÓ",
+  "dane": "05893"
+ },
+ "yolombo": {
+  "nombre": "YOLOMBÓ",
+  "dane": "05890"
+ },
+ "yarumal": {
+  "nombre": "YARUMAL",
+  "dane": "05887"
+ },
+ "yali": {
+  "nombre": "YALÍ",
+  "dane": "05885"
+ },
+ "venecia": {
+  "nombre": "VENECIA",
+  "dane": "05861"
+ },
+ "vegachi": {
+  "nombre": "VEGACHÍ",
+  "dane": "05858"
+ },
+ "valparaiso": {
+  "nombre": "VALPARAÍSO",
+  "dane": "05856"
+ },
+ "valdivia": {
+  "nombre": "VALDIVIA",
+  "dane": "05854"
+ },
+ "uramita": {
+  "nombre": "URAMITA",
+  "dane": "05842"
+ },
+ "turbo": {
+  "nombre": "TURBO",
+  "dane": "05837"
+ },
+ "toledo": {
+  "nombre": "TOLEDO",
+  "dane": "05819"
+ },
+ "titiribi": {
+  "nombre": "TITIRIBÍ",
+  "dane": "05809"
+ },
+ "tarso": {
+  "nombre": "TARSO",
+  "dane": "05792"
+ },
+ "taraza": {
+  "nombre": "TARAZÁ",
+  "dane": "05790"
+ },
+ "tamesis": {
+  "nombre": "TÁMESIS",
+  "dane": "05789"
+ },
+ "sopetran": {
+  "nombre": "SOPETRÁN",
+  "dane": "05761"
+ },
+ "sonson": {
+  "nombre": "SONSÓN",
+  "dane": "05756"
+ },
+ "segovia": {
+  "nombre": "SEGOVIA",
+  "dane": "05736"
+ },
+ "santuario": {
+  "nombre": "EL SANTUARIO",
+  "dane": "05697"
+ },
+ "santodomingo": {
+  "nombre": "SANTO DOMINGO",
+  "dane": "05690"
+ },
+ "santarosadeosos": {
+  "nombre": "SANTA ROSA DE OSOS",
+  "dane": "05686"
+ },
+ "santabarbara": {
+  "nombre": "SANTA BÁRBARA",
+  "dane": "05679"
+ },
+ "giraldo": {
+  "nombre": "GIRALDO",
+  "dane": "05306"
+ },
+ "fredonia": {
+  "nombre": "FREDONIA",
+  "dane": "05282"
+ },
+ "envigado": {
+  "nombre": "ENVIGADO",
+  "dane": "05266"
+ },
+ "entrerrios": {
+  "nombre": "ENTRERRÍOS",
+  "dane": "05264"
+ },
+ "bagre": {
+  "nombre": "EL BAGRE",
+  "dane": "05250"
+ },
+ "ebejico": {
+  "nombre": "EBÉJICO",
+  "dane": "05240"
+ },
+ "donmatias": {
+  "nombre": "DONMATÍAS",
+  "dane": "05237"
+ },
+ "copacabana": {
+  "nombre": "COPACABANA",
+  "dane": "05212"
+ },
+ "concordia": {
+  "nombre": "CONCORDIA",
+  "dane": "05209"
+ },
+ "concepcion": {
+  "nombre": "CONCEPCIÓN",
+  "dane": "05206"
+ },
+ "cocorna": {
+  "nombre": "COCORNÁ",
+  "dane": "05197"
+ },
+ "cisneros": {
+  "nombre": "CISNEROS",
+  "dane": "05190"
+ },
+ "chigorodo": {
+  "nombre": "CHIGORODÓ",
+  "dane": "05172"
+ },
+ "caucasia": {
+  "nombre": "CAUCASIA",
+  "dane": "05154"
+ },
+ "carolina": {
+  "nombre": "CAROLINA",
+  "dane": "05150"
+ },
+ "carmendeviboral": {
+  "nombre": "EL CARMEN DE VIBORAL",
+  "dane": "05148"
+ },
+ "carepa": {
+  "nombre": "CAREPA",
+  "dane": "05147"
+ },
+ "caramanta": {
+  "nombre": "CARAMANTA",
+  "dane": "05145"
+ },
+ "caracoli": {
+  "nombre": "CARACOLÍ",
+  "dane": "05142"
+ },
+ "canasgordas": {
+  "nombre": "CAÑASGORDAS",
+  "dane": "05138"
+ },
+ "campamento": {
+  "nombre": "CAMPAMENTO",
+  "dane": "05134"
+ },
+ "caldas": {
+  "nombre": "CALDAS",
+  "dane": "05129"
+ },
+ "caicedo": {
+  "nombre": "CAICEDO",
+  "dane": "05125"
+ },
+ "sanvicenteferrer": {
+  "nombre": "SAN VICENTE FERRER",
+  "dane": "05674"
+ },
+ "sanroque": {
+  "nombre": "SAN ROQUE",
+  "dane": "05670"
+ },
+ "sanrafael": {
+  "nombre": "SAN RAFAEL",
+  "dane": "05667"
+ },
+ "sanpedrodeuraba": {
+  "nombre": "SAN PEDRO DE URABÁ",
+  "dane": "05665"
+ },
+ "sanpedrodelosmilagros": {
+  "nombre": "SAN PEDRO DE LOS MILAGROS",
+  "dane": "05664"
+ },
+ "sanluis": {
+  "nombre": "SAN LUIS",
+  "dane": "05660"
+ },
+ "sanjuandeuraba": {
+  "nombre": "SAN JUAN DE URABÁ",
+  "dane": "05659"
+ },
+ "sanjosedelamontana": {
+  "nombre": "SAN JOSÉ DE LA MONTAÑA",
+  "dane": "05658"
+ },
+ "sanjeronimo": {
+  "nombre": "SAN JERÓNIMO",
+  "dane": "05656"
+ },
+ "sanfrancisco": {
+  "nombre": "SAN FRANCISCO",
+  "dane": "05652"
+ },
+ "sancarlos": {
+  "nombre": "SAN CARLOS",
+  "dane": "05649"
+ },
+ "sanandresdecuerquia": {
+  "nombre": "SAN ANDRÉS DE CUERQUÍA",
+  "dane": "05647"
+ },
+ "salgar": {
+  "nombre": "SALGAR",
+  "dane": "05642"
+ },
+ "sabanalarga": {
+  "nombre": "SABANALARGA",
+  "dane": "05628"
+ },
+ "rionegro": {
+  "nombre": "RIONEGRO",
+  "dane": "05615"
+ },
+ "retiro": {
+  "nombre": "RETIRO",
+  "dane": "05607"
+ },
+ "remedios": {
+  "nombre": "REMEDIOS",
+  "dane": "05604"
+ },
+ "puertotriunfo": {
+  "nombre": "PUERTO TRIUNFO",
+  "dane": "05591"
+ },
+ "puertonare": {
+  "nombre": "PUERTO NARE",
+  "dane": "05585"
+ },
+ "puertoberrio": {
+  "nombre": "PUERTO BERRÍO",
+  "dane": "05579"
+ },
+ "pueblorrico": {
+  "nombre": "PUEBLORRICO",
+  "dane": "05576"
+ },
+ "peque": {
+  "nombre": "PEQUE",
+  "dane": "05543"
+ },
+ "penol": {
+  "nombre": "PEÑOL",
+  "dane": "05541"
+ },
+ "olaya": {
+  "nombre": "OLAYA",
+  "dane": "05501"
+ },
+ "nechi": {
+  "nombre": "NECHÍ",
+  "dane": "05495"
+ },
+ "necocli": {
+  "nombre": "NECOCLÍ",
+  "dane": "05490"
+ },
+ "narino": {
+  "nombre": "NARIÑO",
+  "dane": "05483"
+ },
+ "mutata": {
+  "nombre": "MUTATÁ",
+  "dane": "05480"
+ },
+ "montebello": {
+  "nombre": "MONTEBELLO",
+  "dane": "05467"
+ },
+ "marinilla": {
+  "nombre": "MARINILLA",
+  "dane": "05440"
+ },
+ "maceo": {
+  "nombre": "MACEO",
+  "dane": "05425"
+ },
+ "liborina": {
+  "nombre": "LIBORINA",
+  "dane": "05411"
+ },
+ "union": {
+  "nombre": "LA UNIÓN",
+  "dane": "05400"
+ },
+ "pintada": {
+  "nombre": "LA PINTADA",
+  "dane": "05390"
+ },
+ "ceja": {
+  "nombre": "LA CEJA",
+  "dane": "05376"
+ },
+ "jerico": {
+  "nombre": "JERICÓ",
+  "dane": "05368"
+ },
+ "jardin": {
+  "nombre": "JARDÍN",
+  "dane": "05364"
+ },
+ "itagui": {
+  "nombre": "ITAGÜÍ",
+  "dane": "05360"
+ },
+ "hispania": {
+  "nombre": "HISPANIA",
+  "dane": "05353"
+ },
+ "heliconia": {
+  "nombre": "HELICONIA",
+  "dane": "05347"
+ },
+ "guatape": {
+  "nombre": "GUATAPÉ",
+  "dane": "05321"
+ },
+ "guarne": {
+  "nombre": "GUARNE",
+  "dane": "05318"
+ },
+ "guadalupe": {
+  "nombre": "GUADALUPE",
+  "dane": "05315"
+ },
+ "granada": {
+  "nombre": "GRANADA",
+  "dane": "05313"
+ },
+ "gomezplata": {
+  "nombre": "GÓMEZ PLATA",
+  "dane": "05310"
+ },
+ "girardota": {
+  "nombre": "GIRARDOTA",
+  "dane": "05308"
+ },
+ "dabeiba": {
+  "nombre": "DABEIBA",
+  "dane": "05234"
+ },
+ "frontino": {
+  "nombre": "FRONTINO",
+  "dane": "05284"
+ },
+ "ituango": {
+  "nombre": "ITUANGO",
+  "dane": "05361"
+ },
+ "urrao": {
+  "nombre": "URRAO",
+  "dane": "05847"
+ },
+ "murindo": {
+  "nombre": "MURINDÓ",
+  "dane": "05475"
+ },
+ "vigiadelfuerte": {
+  "nombre": "VIGÍA DEL FUERTE",
+  "dane": "05873"
+ },
+ "apartado": {
+  "nombre": "APARTADÓ",
+  "dane": "05045"
+ },
+ "sabaneta": {
+  "nombre": "SABANETA",
+  "dane": "05631"
+ },
+ "estrella": {
+  "nombre": "LA ESTRELLA",
+  "dane": "05380"
+ }
+}

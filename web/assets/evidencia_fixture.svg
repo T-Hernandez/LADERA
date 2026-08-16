@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Ilustración ficticia de un talud">
+  <rect width="640" height="360" fill="#d8d2c4"/>
+  <path d="M0 220 L220 90 L420 150 L640 40 L640 360 L0 360 Z" fill="#6b5a45"/>
+  <path d="M0 260 L180 160 L400 210 L640 120 L640 360 L0 360 Z" fill="#4d4033"/>
+  <rect x="250" y="150" width="28" height="110" fill="#c4b49a"/>
+  <rect x="286" y="168" width="28" height="92" fill="#b39d7d"/>
+  <rect x="322" y="188" width="28" height="72" fill="#c4b49a"/>
+  <path d="M248 148 L358 148 L358 160 L248 160 Z" fill="#8a7a62"/>
+  <text x="24" y="36" fill="#3a332b" font-family="Georgia, serif" font-size="16">Evidencia de fixture  no es un sitio real</text>
+</svg>

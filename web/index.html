@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LADERA — trazabilidad ciudadana</title>
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/estilos.css">
+</head>
+<body>
+  <a class="saltar" href="#panel">Saltar al panel</a>
+  <header class="encabezado">
+    <div class="marca">
+      <p class="marca-nombre">LADERA</p>
+      <p class="marca-linea">Lo contratado y lo observado, en el mismo territorio</p>
+    </div>
+    <nav class="nav" aria-label="Principal">
+      <button type="button" data-vista="explorar" class="esta">Explorar</button>
+      <button type="button" data-vista="mapa">Mapa</button>
+      <button type="button" data-vista="reportar">Reportar</button>
+      <button type="button" data-vista="buscar">Buscar</button>
+    </nav>
+  </header>
+
+  <main class="cuerpo">
+    <section class="mapa-caja" aria-label="Mapa de Antioquia">
+      <div id="mapa" role="application" aria-label="Municipios de Antioquia"></div>
+      <p class="mapa-leyenda">
+        <span class="chip chip-vacio">sin dato</span>
+        <span class="chip chip-contrato">contratos</span>
+        <span class="chip chip-reporte">reportes</span>
+        <span class="chip chip-ambos">ambos</span>
+      </p>
+    </section>
+
+    <aside id="panel" class="panel" aria-live="polite">
+      <div id="panel-contenido"></div>
+    </aside>
+  </main>
+
+  <footer class="pie">
+    <p>
+      Los contratos de esta versión son un <strong>fixture</strong>.
+      Un reporte es una observación, no un hecho verificado.
+      Cero contratos identificados no significa cero inversión.
+    </p>
+  </footer>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

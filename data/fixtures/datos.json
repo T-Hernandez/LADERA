@@ -1,0 +1,1285 @@
+{
+  "resumen": {
+    "territorio": "Antioquia",
+    "municipios": 125,
+    "municipios_con_contratos": 2,
+    "municipios_con_reportes": 2,
+    "contratos": 3,
+    "contratos_con_cifra": 2,
+    "plata_total": 3290000000,
+    "reportes": 2,
+    "relaciones": 1,
+    "fuente": "fixture",
+    "nota": "Datos ficticios para construir la interfaz. No son contratos ni reportes reales."
+  },
+  "municipios": {
+    "05001": {
+      "nombre": "MEDELLÍN",
+      "dane": "05001",
+      "contratos": 2,
+      "reportes": 1,
+      "plata_total": 2400000000,
+      "contrato_ids": [
+        "FIX-X",
+        "FIX-Z"
+      ],
+      "reporte_ids": [
+        "REP-1"
+      ]
+    },
+    "05101": {
+      "nombre": "CIUDAD BOLÍVAR",
+      "dane": "05101",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05107": {
+      "nombre": "BRICEÑO",
+      "dane": "05107",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05113": {
+      "nombre": "BURITICÁ",
+      "dane": "05113",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05120": {
+      "nombre": "CÁCERES",
+      "dane": "05120",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05093": {
+      "nombre": "BETULIA",
+      "dane": "05093",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05091": {
+      "nombre": "BETANIA",
+      "dane": "05091",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05088": {
+      "nombre": "BELLO",
+      "dane": "05088",
+      "contratos": 1,
+      "reportes": 0,
+      "plata_total": 890000000,
+      "contrato_ids": [
+        "FIX-Y"
+      ],
+      "reporte_ids": []
+    },
+    "05086": {
+      "nombre": "BELMIRA",
+      "dane": "05086",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05079": {
+      "nombre": "BARBOSA",
+      "dane": "05079",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05059": {
+      "nombre": "ARMENIA",
+      "dane": "05059",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05055": {
+      "nombre": "ARGELIA",
+      "dane": "05055",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05051": {
+      "nombre": "ARBOLETES",
+      "dane": "05051",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05044": {
+      "nombre": "ANZÁ",
+      "dane": "05044",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05042": {
+      "nombre": "SANTA FÉ DE ANTIOQUIA",
+      "dane": "05042",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05040": {
+      "nombre": "ANORÍ",
+      "dane": "05040",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05038": {
+      "nombre": "ANGOSTURA",
+      "dane": "05038",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05036": {
+      "nombre": "ANGELÓPOLIS",
+      "dane": "05036",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05034": {
+      "nombre": "ANDES",
+      "dane": "05034",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05031": {
+      "nombre": "AMALFI",
+      "dane": "05031",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05030": {
+      "nombre": "AMAGÁ",
+      "dane": "05030",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05021": {
+      "nombre": "ALEJANDRÍA",
+      "dane": "05021",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05004": {
+      "nombre": "ABRIAQUÍ",
+      "dane": "05004",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05002": {
+      "nombre": "ABEJORRAL",
+      "dane": "05002",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05895": {
+      "nombre": "ZARAGOZA",
+      "dane": "05895",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05893": {
+      "nombre": "YONDÓ",
+      "dane": "05893",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05890": {
+      "nombre": "YOLOMBÓ",
+      "dane": "05890",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05887": {
+      "nombre": "YARUMAL",
+      "dane": "05887",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05885": {
+      "nombre": "YALÍ",
+      "dane": "05885",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05861": {
+      "nombre": "VENECIA",
+      "dane": "05861",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05858": {
+      "nombre": "VEGACHÍ",
+      "dane": "05858",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05856": {
+      "nombre": "VALPARAÍSO",
+      "dane": "05856",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05854": {
+      "nombre": "VALDIVIA",
+      "dane": "05854",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05842": {
+      "nombre": "URAMITA",
+      "dane": "05842",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05837": {
+      "nombre": "TURBO",
+      "dane": "05837",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05819": {
+      "nombre": "TOLEDO",
+      "dane": "05819",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05809": {
+      "nombre": "TITIRIBÍ",
+      "dane": "05809",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05792": {
+      "nombre": "TARSO",
+      "dane": "05792",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05790": {
+      "nombre": "TARAZÁ",
+      "dane": "05790",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05789": {
+      "nombre": "TÁMESIS",
+      "dane": "05789",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05761": {
+      "nombre": "SOPETRÁN",
+      "dane": "05761",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05756": {
+      "nombre": "SONSÓN",
+      "dane": "05756",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05736": {
+      "nombre": "SEGOVIA",
+      "dane": "05736",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05697": {
+      "nombre": "EL SANTUARIO",
+      "dane": "05697",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05690": {
+      "nombre": "SANTO DOMINGO",
+      "dane": "05690",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05686": {
+      "nombre": "SANTA ROSA DE OSOS",
+      "dane": "05686",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05679": {
+      "nombre": "SANTA BÁRBARA",
+      "dane": "05679",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05306": {
+      "nombre": "GIRALDO",
+      "dane": "05306",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05282": {
+      "nombre": "FREDONIA",
+      "dane": "05282",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05266": {
+      "nombre": "ENVIGADO",
+      "dane": "05266",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05264": {
+      "nombre": "ENTRERRÍOS",
+      "dane": "05264",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05250": {
+      "nombre": "EL BAGRE",
+      "dane": "05250",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05240": {
+      "nombre": "EBÉJICO",
+      "dane": "05240",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05237": {
+      "nombre": "DONMATÍAS",
+      "dane": "05237",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05212": {
+      "nombre": "COPACABANA",
+      "dane": "05212",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05209": {
+      "nombre": "CONCORDIA",
+      "dane": "05209",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05206": {
+      "nombre": "CONCEPCIÓN",
+      "dane": "05206",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05197": {
+      "nombre": "COCORNÁ",
+      "dane": "05197",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05190": {
+      "nombre": "CISNEROS",
+      "dane": "05190",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05172": {
+      "nombre": "CHIGORODÓ",
+      "dane": "05172",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05154": {
+      "nombre": "CAUCASIA",
+      "dane": "05154",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05150": {
+      "nombre": "CAROLINA",
+      "dane": "05150",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05148": {
+      "nombre": "EL CARMEN DE VIBORAL",
+      "dane": "05148",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05147": {
+      "nombre": "CAREPA",
+      "dane": "05147",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05145": {
+      "nombre": "CARAMANTA",
+      "dane": "05145",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05142": {
+      "nombre": "CARACOLÍ",
+      "dane": "05142",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05138": {
+      "nombre": "CAÑASGORDAS",
+      "dane": "05138",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05134": {
+      "nombre": "CAMPAMENTO",
+      "dane": "05134",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05129": {
+      "nombre": "CALDAS",
+      "dane": "05129",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05125": {
+      "nombre": "CAICEDO",
+      "dane": "05125",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05674": {
+      "nombre": "SAN VICENTE FERRER",
+      "dane": "05674",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05670": {
+      "nombre": "SAN ROQUE",
+      "dane": "05670",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05667": {
+      "nombre": "SAN RAFAEL",
+      "dane": "05667",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05665": {
+      "nombre": "SAN PEDRO DE URABÁ",
+      "dane": "05665",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05664": {
+      "nombre": "SAN PEDRO DE LOS MILAGROS",
+      "dane": "05664",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05660": {
+      "nombre": "SAN LUIS",
+      "dane": "05660",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05659": {
+      "nombre": "SAN JUAN DE URABÁ",
+      "dane": "05659",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05658": {
+      "nombre": "SAN JOSÉ DE LA MONTAÑA",
+      "dane": "05658",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05656": {
+      "nombre": "SAN JERÓNIMO",
+      "dane": "05656",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05652": {
+      "nombre": "SAN FRANCISCO",
+      "dane": "05652",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05649": {
+      "nombre": "SAN CARLOS",
+      "dane": "05649",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05647": {
+      "nombre": "SAN ANDRÉS DE CUERQUÍA",
+      "dane": "05647",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05642": {
+      "nombre": "SALGAR",
+      "dane": "05642",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05628": {
+      "nombre": "SABANALARGA",
+      "dane": "05628",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05615": {
+      "nombre": "RIONEGRO",
+      "dane": "05615",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05607": {
+      "nombre": "RETIRO",
+      "dane": "05607",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05604": {
+      "nombre": "REMEDIOS",
+      "dane": "05604",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05591": {
+      "nombre": "PUERTO TRIUNFO",
+      "dane": "05591",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05585": {
+      "nombre": "PUERTO NARE",
+      "dane": "05585",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05579": {
+      "nombre": "PUERTO BERRÍO",
+      "dane": "05579",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05576": {
+      "nombre": "PUEBLORRICO",
+      "dane": "05576",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05543": {
+      "nombre": "PEQUE",
+      "dane": "05543",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05541": {
+      "nombre": "PEÑOL",
+      "dane": "05541",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05501": {
+      "nombre": "OLAYA",
+      "dane": "05501",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05495": {
+      "nombre": "NECHÍ",
+      "dane": "05495",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05490": {
+      "nombre": "NECOCLÍ",
+      "dane": "05490",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05483": {
+      "nombre": "NARIÑO",
+      "dane": "05483",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05480": {
+      "nombre": "MUTATÁ",
+      "dane": "05480",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05467": {
+      "nombre": "MONTEBELLO",
+      "dane": "05467",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05440": {
+      "nombre": "MARINILLA",
+      "dane": "05440",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05425": {
+      "nombre": "MACEO",
+      "dane": "05425",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05411": {
+      "nombre": "LIBORINA",
+      "dane": "05411",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05400": {
+      "nombre": "LA UNIÓN",
+      "dane": "05400",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05390": {
+      "nombre": "LA PINTADA",
+      "dane": "05390",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05376": {
+      "nombre": "LA CEJA",
+      "dane": "05376",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05368": {
+      "nombre": "JERICÓ",
+      "dane": "05368",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05364": {
+      "nombre": "JARDÍN",
+      "dane": "05364",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05360": {
+      "nombre": "ITAGÜÍ",
+      "dane": "05360",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05353": {
+      "nombre": "HISPANIA",
+      "dane": "05353",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05347": {
+      "nombre": "HELICONIA",
+      "dane": "05347",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05321": {
+      "nombre": "GUATAPÉ",
+      "dane": "05321",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05318": {
+      "nombre": "GUARNE",
+      "dane": "05318",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05315": {
+      "nombre": "GUADALUPE",
+      "dane": "05315",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05313": {
+      "nombre": "GRANADA",
+      "dane": "05313",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05310": {
+      "nombre": "GÓMEZ PLATA",
+      "dane": "05310",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05308": {
+      "nombre": "GIRARDOTA",
+      "dane": "05308",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05234": {
+      "nombre": "DABEIBA",
+      "dane": "05234",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05284": {
+      "nombre": "FRONTINO",
+      "dane": "05284",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05361": {
+      "nombre": "ITUANGO",
+      "dane": "05361",
+      "contratos": 0,
+      "reportes": 1,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": [
+        "REP-2"
+      ]
+    },
+    "05847": {
+      "nombre": "URRAO",
+      "dane": "05847",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05475": {
+      "nombre": "MURINDÓ",
+      "dane": "05475",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05873": {
+      "nombre": "VIGÍA DEL FUERTE",
+      "dane": "05873",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05045": {
+      "nombre": "APARTADÓ",
+      "dane": "05045",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05631": {
+      "nombre": "SABANETA",
+      "dane": "05631",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    },
+    "05380": {
+      "nombre": "LA ESTRELLA",
+      "dane": "05380",
+      "contratos": 0,
+      "reportes": 0,
+      "plata_total": 0,
+      "contrato_ids": [],
+      "reporte_ids": []
+    }
+  },
+  "contratos": {
+    "FIX-X": {
+      "id": "FIX-X",
+      "fuente": "fixture",
+      "url_fuente": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.FIXTURE.X",
+      "objeto": "Obras de contención y estabilización de ladera en el barrio El Popular, comuna 1, municipio de Medellín",
+      "entidad": "Alcaldía de Medellín — fixture",
+      "contratista": "Consorcio Ladera Norte (dato ficticio)",
+      "valor": 2400000000,
+      "valor_motivo": null,
+      "fecha_firma": "2025-03-12",
+      "fecha_inicio": "2025-04-01",
+      "fecha_fin": "2026-11-30",
+      "estado": "ACTIVO",
+      "municipio_dane": "05001",
+      "municipio_nombre": "MEDELLÍN",
+      "ubicaciones": [
+        {
+          "nombre": "barrio El Popular",
+          "fragmento": "barrio El Popular, comuna 1",
+          "fuente": "objeto"
+        }
+      ],
+      "texto_original": "Obras de contención y estabilización de ladera en el barrio El Popular, comuna 1, municipio de Medellín"
+    },
+    "FIX-Y": {
+      "id": "FIX-Y",
+      "fuente": "fixture",
+      "url_fuente": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.FIXTURE.Y",
+      "objeto": "Construcción de obras de drenaje y mitigación de riesgo en el sector Niquía, municipio de Bello",
+      "entidad": "Alcaldía de Bello — fixture",
+      "contratista": "Ingeniería del Norte S.A.S. (dato ficticio)",
+      "valor": 890000000,
+      "valor_motivo": null,
+      "fecha_firma": "2023-01-20",
+      "fecha_inicio": "2023-02-15",
+      "fecha_fin": "2024-06-30",
+      "estado": "FINALIZADO",
+      "municipio_dane": "05088",
+      "municipio_nombre": "BELLO",
+      "ubicaciones": [
+        {
+          "nombre": "sector Niquía",
+          "fragmento": "sector Niquía, municipio de Bello",
+          "fuente": "objeto"
+        }
+      ],
+      "texto_original": "Construcción de obras de drenaje y mitigación de riesgo en el sector Niquía, municipio de Bello"
+    },
+    "FIX-Z": {
+      "id": "FIX-Z",
+      "fuente": "fixture",
+      "url_fuente": null,
+      "objeto": "Mantenimiento de obras de contención en la ladera de la comuna 8, Medellín. Valor no utilizable en este fixture.",
+      "entidad": "Área Metropolitana — fixture",
+      "contratista": null,
+      "valor": null,
+      "valor_motivo": "cifra no utilizable en el fixture",
+      "fecha_firma": "2024-08-01",
+      "fecha_inicio": null,
+      "fecha_fin": null,
+      "estado": "SIN_FECHA_SUFICIENTE",
+      "municipio_dane": "05001",
+      "municipio_nombre": "MEDELLÍN",
+      "ubicaciones": [],
+      "texto_original": "Mantenimiento de obras de contención en la ladera de la comuna 8, Medellín. Valor no utilizable en este fixture."
+    }
+  },
+  "reportes": {
+    "REP-1": {
+      "id": "REP-1",
+      "fecha_creacion": "2026-06-18T10:15:00-05:00",
+      "fecha_observacion": "2026-06-15",
+      "descripcion": "El muro de contención en El Popular aparece inconcluso. Hay cárcavas en el talud y escorrentía hacia las casas de abajo.",
+      "categoria": "OBRA_INCONCLUSA",
+      "estado": "RELACIONADO",
+      "autor": "vecina del Popular (fixture)",
+      "ubicacion": {
+        "dane": "05001",
+        "nombre": "MEDELLÍN",
+        "detalle": "barrio El Popular",
+        "lat": 6.302,
+        "lng": -75.548
+      },
+      "evidencias": [
+        {
+          "id": "EV-1",
+          "tipo": "foto",
+          "url": "/assets/evidencia_fixture.svg",
+          "fecha": "2026-06-15",
+          "metadata": {
+            "nota": "ilustración ficticia, no es un sitio real"
+          }
+        }
+      ]
+    },
+    "REP-2": {
+      "id": "REP-2",
+      "fecha_creacion": "2026-07-02T16:40:00-05:00",
+      "fecha_observacion": "2026-07-01",
+      "descripcion": "Se observa un movimiento en masa sobre la vía que comunica con el casco urbano. No hay señal visible de obra reciente.",
+      "categoria": "RIESGO",
+      "estado": "PUBLICADO",
+      "autor": "habitante de Ituango (fixture)",
+      "ubicacion": {
+        "dane": "05361",
+        "nombre": "ITUANGO",
+        "detalle": "vía al casco urbano",
+        "lat": 7.171,
+        "lng": -76.084
+      },
+      "evidencias": []
+    }
+  },
+  "relaciones": [
+    {
+      "id": "REL-1",
+      "origen": {
+        "tipo": "reporte",
+        "id": "REP-1"
+      },
+      "destino": {
+        "tipo": "contrato",
+        "id": "FIX-X"
+      },
+      "tipo_relacion": "COMPUESTA",
+      "metodo": "REGLAS",
+      "confianza": null,
+      "estado": "SUGERIDA",
+      "evidencia": "Mismo municipio (Medellín) y el reporte describe un muro inconcluso en El Popular, lugar citado en el objeto del contrato FIX-X.",
+      "creado_en": "2026-06-18T10:20:00-05:00",
+      "revisado_en": null
+    }
+  ]
+}
