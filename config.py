@@ -34,6 +34,35 @@ CURACION_REVISAR = DIR_INTERIM / "contratos_revisar.csv"
 CURACION_EXCLUIDOS = DIR_INTERIM / "contratos_excluidos.csv"
 CURACION_REPORTE = DIR_FINAL / "reporte_curacion.txt"
 CURACION_MANIFIESTO = DIR_METADATA / "curacion_manifest.json"
+RESOLUCION_SALIDA = DIR_INTERIM / "contratos_resueltos.csv"
+RESOLUCION_REPORTE = DIR_FINAL / "reporte_resolucion.txt"
+RESOLUCION_MANIFIESTO = DIR_METADATA / "resolucion_manifest.json"
+
+# Variantes de ciudad que el lookup no trae con ese texto. No alias cortos ambiguos.
+MUNICIPIO_ALIAS = {
+    "don matias": "05237",
+    "donmatias": "05237",
+    "santafe de antioquia": "05042",
+    "santa fe de antioquia": "05042",
+    "santafedeantioquia": "05042",
+    "san vicente": "05674",
+    "san pedro uraba": "05665",
+}
+
+# Un nombre corto que cubre más de un municipio. No se resuelve solo.
+MUNICIPIO_AMBIGUO = {
+    "san pedro": ("05664", "05665"),
+}
+
+CIUDADES_VACIAS = (
+    "no definido",
+    "no aplica",
+    "n/a",
+    "na",
+    "sin definir",
+    "sin informacion",
+    "sin información",
+)
 
 # No se reemplaza un valor raro por una estimación.
 VALOR_MINIMO_USABLE = 10_000

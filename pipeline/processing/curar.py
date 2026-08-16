@@ -7,7 +7,6 @@ import csv
 import hashlib
 import json
 import sys
-import unicodedata
 from collections import Counter
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -15,6 +14,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ))
 
+from modelo.texto import norm_busqueda as norm  # noqa: E402
 from config import (  # noqa: E402
     CURACION_EXCLUIDOS,
     CURACION_LIMPIO,
@@ -56,12 +56,6 @@ ESTADOS_SECOP = {
 
 class CuracionError(RuntimeError):
     pass
-
-
-def norm(texto: str) -> str:
-    descompuesto = unicodedata.normalize("NFD", str(texto or ""))
-    sin_tildes = "".join(c for c in descompuesto if unicodedata.category(c) != "Mn")
-    return " ".join(sin_tildes.casefold().split())
 
 
 def parse_fecha(valor: str | None) -> date | None:

@@ -69,3 +69,13 @@
 **Impacto:** el frontend no cambia. La Fase 5 parte de `data/interim/contratos_limpios.csv`.
 
 **Descartado:** deduplicar por nombre de entidad o municipio.
+
+## 2026-08-15 — Territorio por DANE, sin IA que invente el lugar
+
+**Decisión:** `pipeline/processing/resolver.py` cruza el objeto y la ciudad con `municipios_lookup.json`. El DANE sale de un nombre oficial, de un alias único (Don Matías, Santa Fe de Antioquia, San Vicente) o queda AMBIGUO / SIN_RESOLVER. Un MULTIMUNICIPIO guarda todos los códigos y no parte el valor. La vereda o el barrio solo se anotan si el fragmento está en el objeto.
+
+**Motivo:** la Fase 5 pregunta qué contratos estuvieron activos en un territorio y un periodo. Eso no autoriza a adivinar el municipio ni a mandar SECOP al mapa.
+
+**Impacto:** el frontend no cambia. La salida es `data/interim/contratos_resueltos.csv`.
+
+**Descartado:** alias cortos como “San Pedro” o “El Carmen”. Dos municipios los comparten.
