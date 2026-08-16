@@ -2,7 +2,7 @@
 
 Plataforma de trazabilidad ciudadana: un registro de lo que las personas observan en el territorio, al lado de la contratación pública que normalmente es difícil de recorrer.
 
-Esta versión cubre la **Fase 1** (mapa + fixture), la **Fase 2** (modelo) y la **Fase 3** (ingesta). La interfaz sigue usando el fixture hasta la curación.
+Esta versión cubre hasta la **Fase 4** (curación local). La interfaz sigue usando el fixture.
 
 ## Cómo correrlo
 
@@ -22,6 +22,7 @@ Abre [http://127.0.0.1:5000](http://127.0.0.1:5000).
 python -m unittest
 python -m pipeline.ingestion --solo-contar
 python -m pipeline.ingestion
+python -m pipeline.processing
 ```
 
 ## Qué probar
@@ -45,5 +46,7 @@ python -m pipeline.ingestion
 | Ingesta | `python -m pipeline.ingestion` |
 | Crudo | `data/raw/contratos_YYYY_MM_DD.csv` |
 | Manifiesto | `data/metadata/ingestion_manifest.json` |
+| Curación | `python -m pipeline.processing` |
+| Limpio / revisar / excluidos | `data/interim/` |
 
 Los contratos reales, cuando existan, salen de SECOP vía datos.gov.co (`jbjy-vk9h`). El enlace de cada hallazgo es el campo `URLProceso`, no una URL inventada.

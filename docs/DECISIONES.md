@@ -59,3 +59,13 @@
 **Impacto:** el crudo queda en `data/raw/contratos_YYYY_MM_DD.csv` y el manifiesto en `data/metadata/ingestion_manifest.json`. Un día no pisa el archivo anterior. Cambiar el filtro no exige reescribir el frontend.
 
 **Descartado:** tratar una descarga parcial como conjunto completo.
+
+## 2026-08-15 — Curación sin estimar valores
+
+**Decisión:** `pipeline/processing/curar.py` clasifica cada fila en LIMPIO / REVISAR / EXCLUIDO. Un valor raro no se reemplaza. Cero cuenta como contrato y no suma. Los montos enormes no se descartan solo por tamaño: no hay contradicción aritmética en el crudo.
+
+**Motivo:** la Fase 4 pide motivo rastreable, no una cifra que “parezca razonable”.
+
+**Impacto:** el frontend no cambia. La Fase 5 parte de `data/interim/contratos_limpios.csv`.
+
+**Descartado:** deduplicar por nombre de entidad o municipio.

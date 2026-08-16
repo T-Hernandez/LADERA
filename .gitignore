@@ -3,7 +3,8 @@ __pycache__/
 *.py[cod]
 .env
 .DS_Store
-data/interim/reportes_locales.json
+data/interim/*
+!data/interim/.gitkeep
 data/raw/*
 !data/raw/.gitkeep
 data/metadata/*
