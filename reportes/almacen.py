@@ -8,8 +8,18 @@ import uuid
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-from config import DIR_EVIDENCIAS, EVIDENCIA_MAX_BYTES, REPORTES_LOCALES
+from config import (
+    AUDITORIA_LOCAL,
+    DIR_EVIDENCIAS,
+    EVIDENCIA_MAX_BYTES,
+    REPORTE_MAX_POR_HORA,
+    REPORTE_MIN_DESCRIPCION,
+    REPORTE_VENTANA_DUPLICADO_HORAS,
+    REPORTES_LOCALES,
+)
 from modelo import ModeloInvalido, reporte
+from reportes.auditoria import registrar
+from reportes.contenido import rechazo_contenido
 from reportes.territorio import municipio_en_punto
 
 TIPOS_FOTO = {
@@ -33,7 +43,7 @@ def leer_reportes(ruta: Path = REPORTES_LOCALES) -> list[dict]:
     return crudo if isinstance(crudo, list) else []
 
 
-def _escribir_reportes(filas: list[dict], ruta: Path) -> None:
+def escribir_reportes(filas: list[dict], ruta: Path) -> None:
     ruta.parent.mkdir(parents=True, exist_ok=True)
     ruta.write_text(json.dumps(filas, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -93,11 +103,28 @@ def crear_observacion(
     dir_evidencias: Path = DIR_EVIDENCIAS,
     max_bytes: int = EVIDENCIA_MAX_BYTES,
     hoy: date | None = None,
+    actor: str = "local",
+    ruta_auditoria: Path = AUDITORIA_LOCAL,
+    otros_reportes: list[dict] | None = None,
 ) -> dict:
     """Crea un reporte completo. No pide ni guarda un contrato."""
+    from reportes.confianza import es_duplicado, exceso_frecuencia
+
     ahora = ahora or datetime.now(timezone.utc)
     hoy = hoy or date.today()
+    actor = (actor or "local").strip() or "local"
     por_dane = {item["dane"]: item for item in lookup.values()}
+    descripcion = str(cuerpo.get("descripcion") or "").strip()
+    invalido = rechazo_contenido(descripcion, REPORTE_MIN_DESCRIPCION)
+    if invalido:
+        raise ReporteError(invalido)
+    if exceso_frecuencia(
+        actor,
+        ruta_auditoria=ruta_auditoria,
+        maximo=REPORTE_MAX_POR_HORA,
+        ahora=ahora,
+    ):
+        raise ReporteError("hay demasiados envíos seguidos desde este origen")
 
     try:
         lat = float(cuerpo.get("lat"))
@@ -123,6 +150,16 @@ def crear_observacion(
         raise ReporteError("la fecha de la observación debe ser YYYY-MM-DD") from exc
     if dia > hoy:
         raise ReporteError("la fecha de la observación no puede ser futura")
+
+    existentes = leer_reportes(ruta_reportes) + list(otros_reportes or [])
+    if es_duplicado(
+        descripcion,
+        dane,
+        existentes,
+        ahora=ahora,
+        horas=REPORTE_VENTANA_DUPLICADO_HORAS,
+    ):
+        raise ReporteError("ya hay una observación muy parecida en este municipio")
 
     ident = f"REP-L-{uuid.uuid4().hex[:8]}"
     ev_id = f"EV-{uuid.uuid4().hex[:8]}"
@@ -159,7 +196,7 @@ def crear_observacion(
             id=ident,
             fecha_creacion=ahora.isoformat(),
             fecha_observacion=fecha_obs,
-            descripcion=str(cuerpo.get("descripcion") or "").strip(),
+            descripcion=descripcion,
             categoria=str(cuerpo.get("categoria") or "").strip(),
             estado="EN_REVISION",
             autor=str(cuerpo.get("autor") or "ciudadano (local)").strip() or "ciudadano (local)",
@@ -178,5 +215,14 @@ def crear_observacion(
 
     actuales = leer_reportes(ruta_reportes)
     actuales.append(creado)
-    _escribir_reportes(actuales, ruta_reportes)
+    escribir_reportes(actuales, ruta_reportes)
+    registrar(
+        actor=actor,
+        accion="CREAR",
+        objeto={"tipo": "reporte", "id": creado["id"]},
+        resultado=creado["estado"],
+        motivo="observación ciudadana enviada a revisión",
+        fecha=ahora,
+        ruta=ruta_auditoria,
+    )
     return creado

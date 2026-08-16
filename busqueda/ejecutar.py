@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from mapa.capas import contrato_en_estado
+from modelo.constantes import ESTADOS_REPORTE_VISIBLES
 from modelo.texto import norm_busqueda
 
 
@@ -102,6 +103,8 @@ def ejecutar(datos: dict, filtros: dict) -> dict:
 
     reportes = []
     for r in datos["reportes"].values():
+        if r.get("estado") not in ESTADOS_REPORTE_VISIBLES:
+            continue
         if dane and (r.get("ubicacion") or {}).get("dane") != dane:
             continue
         if cat and r.get("categoria") != cat:

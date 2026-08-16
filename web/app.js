@@ -34,12 +34,15 @@
     DESCONOCIDO: "Desconocido",
   };
   const estadosReporte = {
+    BORRADOR: "Borrador",
     PUBLICADO: "Publicado",
     EN_REVISION: "En revisión",
     RELACIONADO: "Relacionado",
     VERIFICADO: "Verificado",
     DESCARTADO: "Descartado",
+    RETIRADO: "Retirado",
   };
+  const estadosOcultos = new Set(["BORRADOR", "DESCARTADO", "RETIRADO"]);
 
   const escapeHtml = (valor) =>
     String(valor ?? "")
@@ -281,7 +284,7 @@
     <li>
       <button type="button" class="tarjeta" data-abrir="reporte:${escapeHtml(r.id)}">
         <strong>${escapeHtml(categorias[r.categoria] || r.categoria)}</strong>
-        <small>${escapeHtml(r.descripcion)}</small>
+        <small>${escapeHtml(estadosReporte[r.estado] || r.estado)} · ${escapeHtml(r.descripcion)}</small>
         <small>${escapeHtml(r.ubicacion.nombre)}${r.ubicacion.detalle ? " · " + escapeHtml(r.ubicacion.detalle) : ""}</small>
       </button>
     </li>`;
@@ -289,7 +292,7 @@
   const vistaExplorar = () => {
     const r = estado.datos.resumen;
     return `
-      <p class="kicker">Fase 9 · búsqueda</p>
+      <p class="kicker">Fase 10 · confianza</p>
       <h1>Una superficie para contrastar</h1>
       <p class="muted">
         LADERA guarda lo que las personas observan y lo pone al lado de la
@@ -309,6 +312,21 @@
         <li><button type="button" class="tarjeta" data-abrir="municipio:05361">Ituango — reporte sin relación contractual conocida</button></li>
       </ul>
       <p class="aviso">${escapeHtml(r.nota)}</p>
+      ${listaConfianza()}
+    `;
+  };
+
+  const listaConfianza = () => {
+    const todos = Object.values(estado.datos.reportes || {});
+    const revision = todos.filter((rep) => rep.estado === "EN_REVISION");
+    const ocultos = todos.filter((rep) => estadosOcultos.has(rep.estado));
+    const bloque = (titulo, filas, vacio) => `
+      <h2>${titulo}</h2>
+      ${filas.length ? `<ul class="lista">${filas.map(tarjetaReporte).join("")}</ul>` : `<p class="muted">${vacio}</p>`}
+    `;
+    return `
+      ${bloque("En revisión", revision, "No hay observaciones esperando revisión en este equipo.")}
+      ${ocultos.length ? bloque("Fuera de la superficie pública", ocultos, "") : ""}
     `;
   };
 
@@ -416,6 +434,7 @@
         ${r.ubicacion.detalle ? " · " + escapeHtml(r.ubicacion.detalle) : ""}
       </p>
       <p class="muted">Autor: ${escapeHtml(r.autor)}. Esto es una observación, no un hecho verificado.</p>
+      ${bloqueConfianza(r)}
       ${ev || `<p class="muted">Sin evidencia fotográfica.</p>`}
       <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(r.ubicacion.dane)}">Ver ubicación municipal</button></p>
       <h2>Contraste con contratación</h2>
@@ -450,6 +469,68 @@
         </label>
         <button type="submit">Indicar este contrato</button>
       </form>
+      ${formulariosConfianza(r)}
+    `;
+  };
+
+  const bloqueConfianza = (r) => {
+    const c = r.confianza || {};
+    const ultima = c.ultima
+      ? `${c.ultima.accion} · ${c.ultima.actor} · ${String(c.ultima.fecha || "").slice(0, 10)} → ${c.ultima.resultado}`
+      : "Sin decisiones posteriores al estado inicial.";
+    return `
+      <section class="confianza">
+        <h2>¿Por qué este estado?</h2>
+        <p>${escapeHtml(c.explicacion || "Aún no hay una explicación registrada.")}</p>
+        <p class="muted">${escapeHtml(ultima)}</p>
+        ${c.senalamientos ? `<p class="muted">Señalamientos: ${escapeHtml(c.senalamientos)}</p>` : ""}
+      </section>
+    `;
+  };
+
+  const formulariosConfianza = (r) => {
+    const destinos = ["EN_REVISION", "PUBLICADO", "RELACIONADO", "VERIFICADO", "DESCARTADO", "RETIRADO"]
+      .filter((s) => s !== r.estado)
+      .map((s) => `<option value="${s}">${escapeHtml(estadosReporte[s])}</option>`)
+      .join("");
+    const senalar = estadosOcultos.has(r.estado)
+      ? ""
+      : `
+      <form class="reporte" id="form-senalar">
+        <p class="paso">Señalar contenido</p>
+        <p class="muted">No descarta el reporte. Si se acumulan señalamientos, vuelve a revisión.</p>
+        <label>Motivo
+          <textarea name="motivo" required minlength="10" maxlength="400" placeholder="¿Por qué este contenido no debería estar a la vista?"></textarea>
+        </label>
+        <button type="submit">Señalar</button>
+      </form>`;
+    const retirar = r.estado === "RETIRADO" || r.estado === "DESCARTADO"
+      ? ""
+      : `
+      <form class="reporte" id="form-retirar">
+        <p class="paso">Retirar</p>
+        <label>Motivo
+          <textarea name="motivo" required minlength="10" maxlength="400" placeholder="Por qué se retira de la superficie pública"></textarea>
+        </label>
+        <button type="submit">Retirar observación</button>
+      </form>`;
+    return `
+      ${senalar}
+      <form class="reporte" id="form-revisar-reporte">
+        <p class="paso">Revisión local</p>
+        <p class="muted">Verificar no declara irregularidad ni da el reporte por verdadero. La IA no puede verificar.</p>
+        <label>Nuevo estado
+          <select name="estado" required>${destinos}</select>
+        </label>
+        <label>Motivo de la decisión
+          <textarea name="motivo" required minlength="10" maxlength="400" placeholder="Queda en la bitácora. Es la respuesta a por qué tiene este estado."></textarea>
+        </label>
+        <label>Quién decide (opcional)
+          <input name="actor" maxlength="80" placeholder="moderación local">
+        </label>
+        <button type="submit">Registrar decisión</button>
+      </form>
+      ${retirar}
     `;
   };
 
@@ -635,6 +716,66 @@
         estado.datos = await (await fetch("/api/datos")).json();
         await cargarRecorte();
         renderPanel();
+      });
+    }
+
+    const recargarTrasConfianza = async (res, creado) => {
+      if (!res.ok) {
+        $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(creado.error)}</p>`);
+        return false;
+      }
+      estado.datos = await (await fetch("/api/datos")).json();
+      await cargarRecorte();
+      renderPanel();
+      return true;
+    };
+
+    const formSenalar = document.getElementById("form-senalar");
+    if (formSenalar) {
+      formSenalar.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
+        const fd = new FormData(formSenalar);
+        const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/senalar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ motivo: fd.get("motivo") }),
+        });
+        await recargarTrasConfianza(res, await res.json());
+      });
+    }
+
+    const formRevisarRep = document.getElementById("form-revisar-reporte");
+    if (formRevisarRep) {
+      formRevisarRep.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
+        const fd = new FormData(formRevisarRep);
+        const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/revisar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            estado: fd.get("estado"),
+            motivo: fd.get("motivo"),
+            actor: fd.get("actor") || undefined,
+          }),
+        });
+        await recargarTrasConfianza(res, await res.json());
+      });
+    }
+
+    const formRetirar = document.getElementById("form-retirar");
+    if (formRetirar) {
+      formRetirar.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
+        const fd = new FormData(formRetirar);
+        const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/retirar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ motivo: fd.get("motivo") }),
+        });
+        await recargarTrasConfianza(res, await res.json());
       });
     }
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from modelo.constantes import MUNICIPIOS_ESPERADOS
+from modelo.constantes import ESTADOS_REPORTE_VISIBLES, MUNICIPIOS_ESPERADOS
 from modelo.entidades import contrato, municipio_vacio, relacion, reporte
 from modelo.errores import ModeloInvalido
 
@@ -33,6 +33,8 @@ def recomputar(datos: dict) -> dict:
         mun = municipios[c["municipio_dane"]]
         mun["contrato_ids"].append(c["id"])
     for r in datos["reportes"].values():
+        if r.get("estado") not in ESTADOS_REPORTE_VISIBLES:
+            continue
         mun = municipios[r["ubicacion"]["dane"]]
         mun["reporte_ids"].append(r["id"])
 
@@ -51,7 +53,9 @@ def recomputar(datos: dict) -> dict:
         1 for c in contratos.values() if c["valor"] is not None
     )
     resumen["plata_total"] = sum(c["valor"] or 0 for c in contratos.values())
-    resumen["reportes"] = len(datos["reportes"])
+    resumen["reportes"] = sum(
+        1 for r in datos["reportes"].values() if r.get("estado") in ESTADOS_REPORTE_VISIBLES
+    )
     resumen["relaciones"] = len(datos["relaciones"])
     resumen["municipios_con_contratos"] = sum(
         1 for m in municipios.values() if m["contratos"] > 0

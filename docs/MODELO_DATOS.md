@@ -72,12 +72,12 @@ Sin fragmento verificable, la ubicación submunicipal no se muestra.
 | `fecha_observacion`| string   | Fecha en que ocurrió lo observado          |
 | `descripcion`      | string   | Qué observó la persona                     |
 | `categoria`        | string   | `OBRA_INCONCLUSA` `OBRA_DETERIORADA` `OBRA_NO_VISIBLE` `PROBLEMA_PERSISTENTE` `RIESGO` `OTRO` |
-| `estado`           | string   | `PUBLICADO` `EN_REVISION` `RELACIONADO` `VERIFICADO` `DESCARTADO` |
+| `estado`           | string   | `BORRADOR` `PUBLICADO` `EN_REVISION` `RELACIONADO` `VERIFICADO` `DESCARTADO` `RETIRADO` |
 | `autor`            | string   | Etiqueta. No es una identidad verificada   |
 | `ubicacion`        | object   | `dane`, `nombre`, `detalle`, `lat`, `lng`  |
 | `evidencias`       | object[] |                                            |
 
-Un reporte es una observación, no un hecho verificado.
+Un reporte es una observación, no un hecho verificado. `VERIFICADO` significa que una persona lo revisó, no que el problema sea cierto. `DESCARTADO`, `RETIRADO` y `BORRADOR` no salen al mapa ni a la búsqueda.
 
 ## Evidencia
 

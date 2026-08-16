@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
+from modelo.constantes import ESTADOS_REPORTE_VISIBLES
+
 
 def _fecha(valor) -> date | None:
     if not valor:
@@ -126,6 +128,8 @@ def recorte_territorial(
 
     reportes_ok = {}
     for ident, r in datos["reportes"].items():
+        if r.get("estado") not in ESTADOS_REPORTE_VISIBLES:
+            continue
         if reporte_en_anio(r, anio):
             reportes_ok[ident] = r
             municipios[r["ubicacion"]["dane"]]["reporte_ids"].append(ident)

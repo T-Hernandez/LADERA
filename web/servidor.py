@@ -12,6 +12,8 @@ RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
 from config import (  # noqa: E402
+    AUDITORIA_LOCAL,
+    DECISIONES_REPORTES,
     DIR_EVIDENCIAS,
     FIXTURE_DATOS,
     GEOJSON_MUNICIPIOS,
@@ -37,6 +39,15 @@ from reportes.almacen import (  # noqa: E402
     crear_observacion,
     leer_reportes,
     ruta_evidencia,
+)
+from reportes.confianza import (  # noqa: E402
+    aplicar_decisiones,
+    enriquecer_confianza,
+    explicar_estado,
+    leer_decisiones,
+    retirar_reporte,
+    revisar_reporte,
+    senalar_reporte,
 )
 from reportes.territorio import municipio_en_punto  # noqa: E402
 
@@ -90,6 +101,7 @@ def ensamblar_datos() -> dict:
             evidencias=crudo.get("evidencias"),
             municipios_validos=validos,
         )
+    aplicar_decisiones(datos["reportes"], leer_decisiones(DECISIONES_REPORTES))
 
     fixture_rels = list(datos.get("relaciones") or [])
     locales = leer_relaciones(RELACIONES_LOCALES)
@@ -99,7 +111,7 @@ def ensamblar_datos() -> dict:
         existentes=fixture_rels + locales,
     )
     datos["relaciones"] = fusionar_relaciones(fixture_rels, locales, sugeridas)
-    return validar_conjunto(datos)
+    return enriquecer_confianza(validar_conjunto(datos), AUDITORIA_LOCAL)
 
 
 @app.get("/")
@@ -109,7 +121,7 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 9})
+    return jsonify({"ok": True, "fase": 10})
 
 
 @app.get("/api/datos")
@@ -182,6 +194,7 @@ def api_crear_reporte():
         cuerpo = request.get_json(silent=True) or {}
         archivo = None
     try:
+        fixture = _leer_json(FIXTURE_DATOS, {}) or {}
         creado = crear_observacion(
             cuerpo,
             archivo,
@@ -189,10 +202,87 @@ def api_crear_reporte():
             geojson=_geojson_municipios(),
             ruta_reportes=REPORTES_LOCALES,
             dir_evidencias=DIR_EVIDENCIAS,
+            actor=request.remote_addr or "local",
+            ruta_auditoria=AUDITORIA_LOCAL,
+            otros_reportes=list((fixture.get("reportes") or {}).values()),
         )
     except ReporteError as exc:
         return jsonify({"error": str(exc)}), 400
     return jsonify(creado), 201
+
+
+def _actor_pedido(cuerpo: dict) -> str:
+    return str(cuerpo.get("actor") or request.remote_addr or "moderación local").strip()
+
+
+@app.get("/api/reportes/<reporte_id>/confianza")
+def api_confianza(reporte_id: str):
+    try:
+        datos = ensamblar_datos()
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
+    hallado = datos["reportes"].get(reporte_id)
+    if hallado is None:
+        return jsonify({"error": "reporte no encontrado"}), 404
+    return jsonify(hallado.get("confianza") or explicar_estado(hallado, eventos=[]))
+
+
+@app.post("/api/reportes/<reporte_id>/revisar")
+def api_revisar_reporte(reporte_id: str):
+    cuerpo = request.get_json(silent=True) or {}
+    try:
+        datos = ensamblar_datos()
+        revisado = revisar_reporte(
+            reporte_id,
+            str(cuerpo.get("estado") or "").strip(),
+            str(cuerpo.get("motivo") or ""),
+            actor=_actor_pedido(cuerpo),
+            reportes=datos["reportes"],
+            ruta_decisiones=DECISIONES_REPORTES,
+            ruta_auditoria=AUDITORIA_LOCAL,
+            ruta_reportes=REPORTES_LOCALES,
+        )
+    except ReporteError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(revisado)
+
+
+@app.post("/api/reportes/<reporte_id>/senalar")
+def api_senalar_reporte(reporte_id: str):
+    cuerpo = request.get_json(silent=True) or {}
+    try:
+        datos = ensamblar_datos()
+        actual = senalar_reporte(
+            reporte_id,
+            str(cuerpo.get("motivo") or ""),
+            actor=_actor_pedido(cuerpo) if cuerpo.get("actor") else (request.remote_addr or "ciudadano"),
+            reportes=datos["reportes"],
+            ruta_decisiones=DECISIONES_REPORTES,
+            ruta_auditoria=AUDITORIA_LOCAL,
+            ruta_reportes=REPORTES_LOCALES,
+        )
+    except ReporteError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(actual)
+
+
+@app.post("/api/reportes/<reporte_id>/retirar")
+def api_retirar_reporte(reporte_id: str):
+    cuerpo = request.get_json(silent=True) or {}
+    try:
+        datos = ensamblar_datos()
+        actual = retirar_reporte(
+            reporte_id,
+            str(cuerpo.get("motivo") or "la observación se retira de la superficie pública"),
+            actor=_actor_pedido(cuerpo) if cuerpo.get("actor") else (request.remote_addr or "ciudadano"),
+            reportes=datos["reportes"],
+            ruta_decisiones=DECISIONES_REPORTES,
+            ruta_auditoria=AUDITORIA_LOCAL,
+            ruta_reportes=REPORTES_LOCALES,
+        )
+    except ReporteError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(actual)
 
 
 @app.post("/api/relaciones")

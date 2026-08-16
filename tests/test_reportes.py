@@ -93,6 +93,7 @@ class TestCrear(unittest.TestCase):
             ruta_reportes=self.ruta,
             dir_evidencias=self.fotos,
             hoy=hoy or date(2026, 8, 15),
+            ruta_auditoria=self.dir / "auditoria.json",
         )
 
     def test_completo_sin_contrato(self):
@@ -157,6 +158,8 @@ class TestApi(unittest.TestCase):
         self.patches = [
             patch("web.servidor.REPORTES_LOCALES", self.dir / "reportes.json"),
             patch("web.servidor.DIR_EVIDENCIAS", self.dir / "evidencias"),
+            patch("web.servidor.AUDITORIA_LOCAL", self.dir / "auditoria.json"),
+            patch("web.servidor.DECISIONES_REPORTES", self.dir / "decisiones.json"),
         ]
         for item in self.patches:
             item.start()

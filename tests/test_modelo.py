@@ -74,6 +74,10 @@ class TestEntidades(unittest.TestCase):
         with self.assertRaises(ModeloInvalido):
             _base_contrato(valor=None, valor_motivo=None)
 
+    def test_estados_de_confianza_se_aceptan(self):
+        self.assertEqual(_base_reporte(estado="BORRADOR")["estado"], "BORRADOR")
+        self.assertEqual(_base_reporte(estado="RETIRADO")["estado"], "RETIRADO")
+
     def test_municipio_inventado_se_rechaza(self):
         with self.assertRaises(ModeloInvalido):
             _base_contrato(municipio_dane="99999")

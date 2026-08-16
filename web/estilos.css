@@ -301,6 +301,17 @@ button.secundario {
 
 button.secundario:hover { border-color: var(--oro); }
 
+.confianza {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--linea);
+}
+
+.confianza h2 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
 .aviso {
   margin: 20px 0 0;
   padding: 12px 14px;

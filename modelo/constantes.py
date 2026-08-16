@@ -22,11 +22,21 @@ CATEGORIAS_REPORTE = frozenset(
 )
 ESTADOS_REPORTE = frozenset(
     {
+        "BORRADOR",
         "PUBLICADO",
         "EN_REVISION",
         "RELACIONADO",
         "VERIFICADO",
         "DESCARTADO",
+        "RETIRADO",
+    }
+)
+ESTADOS_REPORTE_VISIBLES = frozenset(
+    {
+        "PUBLICADO",
+        "EN_REVISION",
+        "RELACIONADO",
+        "VERIFICADO",
     }
 )
 TIPOS_EVIDENCIA = frozenset({"foto", "url", "nota"})

@@ -119,3 +119,13 @@
 **Impacto:** el recuadro Buscar deja de filtrar en el navegador. No se inventa `url_fuente`.
 
 **Descartado:** que el modelo narre contratos, declare irregularidad o reemplace la fuente.
+
+## 2026-08-15 — El estado se explica; no se presume verdad
+
+**Decisión:** cada reporte tiene un estado de la Fase 10. Crear, señalar, revisar y retirar quedan en `data/interim/auditoria.json` con actor, acción, fecha, objeto y resultado. La decisión administrativa vive en `reportes_decisiones.json` y pisa el fixture sin reescribirlo. `DESCARTADO`, `RETIRADO` y `BORRADOR` no salen al mapa ni a la búsqueda. La IA no puede pasar un reporte a `VERIFICADO`.
+
+**Motivo:** el criterio de la Fase 10 es poder responder «¿por qué este reporte tiene este estado?». Un sello de verificado no es un fallo ni una denuncia.
+
+**Impacto:** `/api/reportes/<id>/revisar`, `/senalar`, `/retirar` y `/confianza`. El panel del reporte muestra la explicación y la última decisión.
+
+**Descartado:** cuentas de moderador, borrado físico, o que tres señalamientos descarten solos el contenido.
