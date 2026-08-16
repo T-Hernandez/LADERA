@@ -47,3 +47,15 @@
 **Impacto:** `construir_fixture.py` y `web/servidor.py` no escriben diccionarios a mano. Si el dato no pasa el modelo, no se sirve.
 
 **Descartado:** confirmar una relación solo porque la IA la afirmó.
+
+## 2026-08-15 — Ingesta solo por datos.gov.co, consulta piloto congelada
+
+**Decisión:** `pipeline/ingestion/bajar.py` consulta `jbjy-vk9h` con
+
+`departamento='Antioquia' AND tipo_de_contrato='Obra' AND fecha_de_firma>='2019-01-01'`.
+
+**Motivo:** SECOP es la fuente; datos.gov.co es el tubo. No se scrapea `community.secop.gov.co`. `urlproceso` se lee, no se construye.
+
+**Impacto:** el crudo queda en `data/raw/contratos_YYYY_MM_DD.csv` y el manifiesto en `data/metadata/ingestion_manifest.json`. Un día no pisa el archivo anterior. Cambiar el filtro no exige reescribir el frontend.
+
+**Descartado:** tratar una descarga parcial como conjunto completo.
