@@ -15,6 +15,7 @@
     busqueda: null,
     q: "",
     usarIa: false,
+    hilo: null,
   };
 
   const $panel = document.getElementById("panel-contenido");
@@ -78,6 +79,53 @@
   };
 
   const snapDe = (dane) => (estado.recorte && estado.recorte.municipios[dane]) || null;
+
+  const TITULOS_SIGUIENTE = {
+    zona: "Elige o pregunta por una zona",
+    evidencia: "Agrega una observación en esta zona",
+    relaciones: "Contrasta con un contrato o espera una sugerencia",
+    continuar: "Otra persona puede seguir contrastando aquí",
+  };
+
+  const cargarHilo = async () => {
+    const q = new URLSearchParams();
+    if (estado.zonaDane) q.set("dane", estado.zonaDane);
+    if (estado.filtro.anio) q.set("anio", estado.filtro.anio);
+    if (estado.filtro.estado) q.set("estado", estado.filtro.estado);
+    if (estado.q) q.set("pregunta", estado.q);
+    const res = await fetch(`/api/recorrido?${q.toString()}`);
+    estado.hilo = await res.json();
+  };
+
+  const centrarZona = (dane) => {
+    if (!estado.mapa || !estado.capa || !dane) return;
+    estado.capa.eachLayer((layer) => {
+      if (daneDe(layer.feature) === dane && layer.getBounds) {
+        estado.mapa.fitBounds(layer.getBounds(), { padding: [28, 28], maxZoom: 10 });
+      }
+    });
+  };
+
+  const htmlHilo = () => {
+    const h = estado.hilo;
+    if (!h) return "";
+    const zona = h.zona && h.zona.nombre ? h.zona.nombre : "sin zona";
+    const periodo = h.filtro && h.filtro.anio ? h.filtro.anio : "todos los años";
+    const pregunta = h.pregunta ? ` · «${h.pregunta}»` : "";
+    const pasos = (h.pasos || [])
+      .map(
+        (p) =>
+          `<li class="${p.listo ? "listo" : ""} ${p.clave === h.siguiente ? "aqui" : ""}">${escapeHtml(p.id)}. ${escapeHtml(p.titulo)}</li>`
+      )
+      .join("");
+    return `
+      <nav class="hilo" aria-label="Recorrido de contraste">
+        <p class="hilo-zona">${escapeHtml(zona)} · ${escapeHtml(String(periodo))}${escapeHtml(pregunta)}</p>
+        <ol>${pasos}</ol>
+        <p class="muted">${escapeHtml(TITULOS_SIGUIENTE[h.siguiente] || "")}</p>
+      </nav>
+    `;
+  };
 
   const colorDinero = (plata, max) => {
     if (!plata || !max) return "#d9d2c4";
@@ -183,15 +231,28 @@
     });
   };
 
-  const abrir = (sel) => {
-    estado.seleccionado = sel;
-    if (sel && sel.tipo === "municipio") estado.zonaDane = sel.id;
-    if (sel) estado.vista = "mapa";
-    pintarCapa();
+  const marcarNav = () => {
     document.querySelectorAll(".nav button").forEach((b) => {
       b.classList.toggle("esta", b.dataset.vista === estado.vista);
     });
-    renderPanel();
+  };
+
+  const abrir = (sel) => {
+    estado.seleccionado = sel;
+    if (sel && sel.tipo === "municipio") {
+      estado.zonaDane = sel.id;
+      centrarZona(sel.id);
+    } else if (sel && sel.tipo === "contrato") {
+      const c = contrato(sel.id);
+      if (c) estado.zonaDane = c.municipio_dane;
+    } else if (sel && sel.tipo === "reporte") {
+      const r = reporte(sel.id);
+      if (r) estado.zonaDane = r.ubicacion.dane;
+    }
+    if (sel) estado.vista = "mapa";
+    pintarCapa();
+    marcarNav();
+    cargarHilo().then(renderPanel);
   };
 
   const quitarMarcadorBorrador = () => {
@@ -248,12 +309,13 @@
   const irVista = (vista) => {
     if (estado.vista === "reportar" && vista !== "reportar") quitarMarcadorBorrador();
     estado.vista = vista;
-    if (vista !== "mapa") estado.seleccionado = null;
+    if (vista === "mapa" && estado.zonaDane) {
+      estado.seleccionado = { tipo: "municipio", id: estado.zonaDane };
+      centrarZona(estado.zonaDane);
+    }
     pintarCapa();
-    document.querySelectorAll(".nav button").forEach((b) => {
-      b.classList.toggle("esta", b.dataset.vista === vista);
-    });
-    renderPanel();
+    marcarNav();
+    cargarHilo().then(renderPanel);
   };
 
   const tarjetaContrato = (c) => `
@@ -292,24 +354,28 @@
   const vistaExplorar = () => {
     const r = estado.datos.resumen;
     return `
-      <p class="kicker">Fase 10 · confianza</p>
-      <h1>Una superficie para contrastar</h1>
+      ${htmlHilo()}
+      <p class="kicker">Un solo recorrido</p>
+      <h1>De lo observado a la evidencia pública</h1>
       <p class="muted">
-        LADERA guarda lo que las personas observan y lo pone al lado de la
-        contratación pública, que de otro modo es difícil de recorrer.
+        Pregunta, elige una zona o marca un punto. El mapa, los contratos y los
+        reportes son el mismo hilo: territorio, periodo, observación y fuente.
       </p>
+      <form class="buscar" id="form-buscar">
+        <input type="search" id="q" value="${escapeHtml(estado.q || "")}" placeholder="¿Qué se contrató aquí?">
+        <button type="submit">Preguntar</button>
+      </form>
       <div class="cifras">
         <div class="cifra"><b>${r.municipios}</b> municipios</div>
         <div class="cifra"><b>${r.contratos}</b> contratos (fixture)</div>
         <div class="cifra"><b>${r.reportes}</b> reportes</div>
         <div class="cifra"><b>${plata(r.plata_total)}</b> con cifra usable</div>
       </div>
-      <h2>Cómo empezar</h2>
-      <p class="muted">Haz clic en Medellín, Bello o Ituango. Son los tres casos del fixture.</p>
+      <h2>Tres hilos del fixture</h2>
       <ul class="lista">
-        <li><button type="button" class="tarjeta" data-abrir="municipio:05001">Medellín — contratos, dinero y un reporte con foto</button></li>
-        <li><button type="button" class="tarjeta" data-abrir="municipio:05088">Bello — contratos, cero reportes</button></li>
-        <li><button type="button" class="tarjeta" data-abrir="municipio:05361">Ituango — reporte sin relación contractual conocida</button></li>
+        <li><button type="button" class="tarjeta" data-recorrido="05001" data-anio="2026" data-pregunta="muro inconcluso en El Popular">El Popular, Medellín — contrato, valor, reporte y una posible relación</button></li>
+        <li><button type="button" class="tarjeta" data-recorrido="05088">Bello — hay contratación identificada y nadie ha observado todavía</button></li>
+        <li><button type="button" class="tarjeta" data-recorrido="05361">Ituango — hay un reporte y no hay relación contractual conocida</button></li>
       </ul>
       <p class="aviso">${escapeHtml(r.nota)}</p>
       ${listaConfianza()}
@@ -337,8 +403,18 @@
     const contratos = (snap.contrato_ids || mun.contrato_ids).map(contrato).filter(Boolean);
     const reportes = (snap.reporte_ids || mun.reporte_ids).map(reporte).filter(Boolean);
     const periodo = estado.filtro.anio ? ` · ${escapeHtml(estado.filtro.anio)}` : "";
+    const relsZona = (estado.datos.relaciones || []).filter((rel) => {
+      if (rel.estado === "DESCARTADA") return false;
+      const ids = [rel.origen, rel.destino];
+      return ids.some(
+        (e) =>
+          (e.tipo === "contrato" && contratos.some((c) => c.id === e.id)) ||
+          (e.tipo === "reporte" && reportes.some((r) => r.id === e.id))
+      );
+    });
     return `
-      <p class="kicker">Municipio · ${escapeHtml(mun.dane)}${periodo}</p>
+      ${htmlHilo()}
+      <p class="kicker">Zona · ${escapeHtml(mun.dane)}${periodo}</p>
       <h1>${escapeHtml(mun.nombre)}</h1>
       <div class="cifras">
         <div class="cifra"><b>${plata(snap.plata != null ? snap.plata : mun.plata_total)}</b> cifra usable identificada</div>
@@ -351,10 +427,27 @@
         <div class="cifra"><b>${snap.sin_cifra || 0}</b> sin cifra usable</div>
       </div>
       <p class="aviso">${escapeHtml((estado.recorte && estado.recorte.nota) || "Cero contratos identificados no significa cero inversión.")}</p>
-      <h2>Contratos</h2>
-      ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">Sin contratación identificada en el conjunto analizado.</p>`}
-      <h2>Reportes</h2>
+      <h2>3. Contratos en esta zona</h2>
+      ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">Sin contratación identificada en el conjunto analizado. Eso no significa cero inversión.</p>`}
+      <h2>5. Reportes existentes</h2>
       ${reportes.length ? `<ul class="lista">${reportes.map(tarjetaReporte).join("")}</ul>` : `<p class="muted">Nadie ha publicado un reporte en este municipio todavía.</p>`}
+      <p><button type="button" class="tarjeta" data-ir="reportar">6. Agregar una observación en ${escapeHtml(mun.nombre)}</button></p>
+      <h2>7. Relaciones</h2>
+      ${
+        relsZona.length
+          ? relsZona
+              .map((rel) => {
+                const cid = rel.origen.tipo === "contrato" ? rel.origen.id : rel.destino.id;
+                const rid = rel.origen.tipo === "reporte" ? rel.origen.id : rel.destino.id;
+                return `<p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(etiquetaRelacion(rel))}</span></p>
+                  <p class="muted">${escapeHtml(rel.evidencia)}</p>
+                  <ul class="lista">${contrato(cid) ? tarjetaContrato(contrato(cid)) : ""}${reporte(rid) ? tarjetaReporte(reporte(rid)) : ""}</ul>
+                  ${accionesRelacion(rel)}`;
+              })
+              .join("")
+          : `<p class="muted">Aún no hay un vínculo registrado. Al agregar evidencia, la plataforma puede sugerir uno. Eso no confirma el reporte.</p>`
+      }
+      <p class="aviso">8. Otra persona puede preguntar de nuevo, señalar un reporte o confirmar una relación desde esta misma zona.</p>
     `;
   };
 
@@ -376,6 +469,7 @@
       .map((u) => `<li><strong>${escapeHtml(u.nombre)}</strong><small>Fragmento: “${escapeHtml(u.fragmento)}”</small></li>`)
       .join("");
     return `
+      ${htmlHilo()}
       <p class="kicker">Contrato · ${escapeHtml(c.fuente)}</p>
       <h1>${escapeHtml(c.id)}</h1>
       <p><span class="estado">${escapeHtml(estadosContrato[c.estado] || c.estado)}</span></p>
@@ -385,7 +479,7 @@
       <p class="muted">${escapeHtml(c.fecha_inicio || "sin inicio")} → ${escapeHtml(c.fecha_fin || "sin fin")}</p>
       ${fuente}
       ${lugares ? `<h2>Lugares con fragmento</h2><ul class="lista">${lugares}</ul>` : ""}
-      <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(c.municipio_dane)}">Ver municipio ${escapeHtml(c.municipio_nombre)}</button></p>
+      <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(c.municipio_dane)}">Volver a la zona ${escapeHtml(c.municipio_nombre)}</button></p>
       <h2>Reportes en contraste</h2>
       ${
         reportes.filter(({ rel }) => rel.estado !== "DESCARTADA").length
@@ -424,6 +518,7 @@
       )
       .join("");
     return `
+      ${htmlHilo()}
       <p class="kicker">Reporte · ${escapeHtml(estadosReporte[r.estado] || r.estado)}</p>
       <h1>${escapeHtml(categorias[r.categoria] || r.categoria)}</h1>
       <p>${escapeHtml(r.descripcion)}</p>
@@ -436,7 +531,7 @@
       <p class="muted">Autor: ${escapeHtml(r.autor)}. Esto es una observación, no un hecho verificado.</p>
       ${bloqueConfianza(r)}
       ${ev || `<p class="muted">Sin evidencia fotográfica.</p>`}
-      <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(r.ubicacion.dane)}">Ver ubicación municipal</button></p>
+      <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(r.ubicacion.dane)}">Volver a la zona ${escapeHtml(r.ubicacion.nombre)}</button></p>
       <h2>Contraste con contratación</h2>
       ${
         contratos.filter(({ rel }) => rel.estado !== "DESCARTADA").length
@@ -539,10 +634,12 @@
       .map(([k, v]) => `<option value="${k}">${escapeHtml(v)}</option>`)
       .join("");
     const punto = estado.puntoReporte || {};
+    const zona = estado.zonaDane ? municipio(estado.zonaDane) : null;
     return `
-      <p class="kicker">Nueva observación</p>
-      <h1>Reportar</h1>
-      <p class="muted">No necesitas conocer un contrato. Describe lo que observaste, márcalo en el mapa y, si puedes, adjunta una foto.</p>
+      ${htmlHilo()}
+      <p class="kicker">6. Agregar evidencia</p>
+      <h1>${zona ? `Observar en ${escapeHtml(zona.nombre)}` : "Nueva observación"}</h1>
+      <p class="muted">${zona ? `Sigues en ${escapeHtml(zona.nombre)}. ` : ""}No necesitas conocer un contrato. Describe lo que observaste, márcalo en el mapa y, si puedes, adjunta una foto.</p>
       <form class="reporte" id="form-reporte">
         <p class="paso">1. Qué observaste</p>
         <label>Descripción
@@ -618,13 +715,21 @@
       <h2>Fuentes</h2>
       ${fuentes ? `<ul class="fuentes">${fuentes}</ul>` : `<p class="muted">Sin fuentes en este recorte.</p>`}
       <p class="aviso">${escapeHtml(b.nota || "")}</p>
+      ${
+        (b.filtros && b.filtros.territorio_dane)
+          ? `<p><button type="button" class="tarjeta" data-seguir="${escapeHtml(b.filtros.territorio_dane)}">Seguir el hilo en esta zona</button></p>`
+          : estado.zonaDane
+            ? `<p><button type="button" class="tarjeta" data-seguir="${escapeHtml(estado.zonaDane)}">Volver a la zona abierta</button></p>`
+            : ""
+      }
     `;
   };
 
   const vistaBuscar = () => `
-      <p class="kicker">Búsqueda inteligente</p>
-      <h1>Preguntar</h1>
-      <p class="muted">La pregunta se convierte en filtros. El conjunto analizado responde. La IA, si está apagada, no hace falta. Si preguntas por «esta zona», abre primero un municipio.</p>
+      ${htmlHilo()}
+      <p class="kicker">Preguntar en el mismo hilo</p>
+      <h1>De la pregunta a la zona</h1>
+      <p class="muted">La pregunta se convierte en filtros. El conjunto analizado responde. Si hay una zona abierta, «esta zona» la usa. La IA, si está apagada, no hace falta.</p>
       <form class="buscar" id="form-buscar">
         <input type="search" id="q" value="${escapeHtml(estado.q || "")}" placeholder="¿Qué se contrató aquí?">
         <label class="ia-toggle"><input type="checkbox" name="usar_ia" ${estado.usarIa ? "checked" : ""}> Interpretar con IA (si no hay clave, se usan reglas)</label>
@@ -639,10 +744,32 @@
       <div id="resultados-busqueda">${htmlResultadosBusqueda()}</div>
     `;
 
+  const aplicarHiloDesdeBusqueda = async (b) => {
+    const f = (b && b.filtros) || {};
+    if (f.territorio_dane) estado.zonaDane = f.territorio_dane;
+    let recortar = false;
+    if (f.periodo && f.periodo.desde && f.periodo.hasta) {
+      const y1 = String(f.periodo.desde).slice(0, 4);
+      const y2 = String(f.periodo.hasta).slice(0, 4);
+      if (y1 === y2) {
+        estado.filtro.anio = y1;
+        recortar = true;
+      }
+    }
+    if (f.estado_contrato) {
+      estado.filtro.estado = f.estado_contrato;
+      recortar = true;
+    }
+    if (recortar) await cargarRecorte();
+    await cargarHilo();
+  };
+
   const lanzarBusqueda = async (pregunta) => {
     const cajaIa = document.querySelector('#form-buscar input[name="usar_ia"]');
     if (cajaIa) estado.usarIa = cajaIa.checked;
     estado.q = pregunta;
+    estado.vista = "buscar";
+    marcarNav();
     const res = await fetch("/api/buscar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -657,9 +784,9 @@
       estado.busqueda = { interpretacion: { explicacion: cuerpo.error, metodo: "ERROR", ia: "apagada" }, filtros: {}, contratos: [], reportes: [], fuentes: [], nota: "" };
     } else {
       estado.busqueda = cuerpo;
+      await aplicarHiloDesdeBusqueda(cuerpo);
     }
-    const caja = document.getElementById("resultados-busqueda");
-    if (caja) caja.innerHTML = htmlResultadosBusqueda();
+    renderPanel();
   };
 
   const renderPanel = () => {
@@ -669,7 +796,7 @@
     else if (estado.seleccionado?.tipo === "municipio") $panel.innerHTML = vistaMunicipio(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "contrato") $panel.innerHTML = vistaContrato(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "reporte") $panel.innerHTML = vistaReporte(estado.seleccionado.id);
-    else $panel.innerHTML = `<p class="kicker">Mapa de trazabilidad</p><h1>Elige un municipio</h1><p class="muted">Enciende o apaga capas. El periodo compara contratación y reportes. Eso no demuestra causa. Al elegir una zona verás qué hay contratado, cuánta cifra usable y qué se ha reportado.</p>`;
+    else $panel.innerHTML = `${htmlHilo()}<p class="kicker">El mismo territorio</p><h1>Elige una zona</h1><p class="muted">El periodo y las capas recortan este mapa. Ver contratación y reportes en el mismo año no demuestra causa. Al elegir una zona sigues el hilo: contratos, valores, observaciones y relaciones.</p>`;
 
     const form = document.getElementById("form-reporte");
     if (form) {
@@ -691,6 +818,7 @@
         quitarMarcadorBorrador();
         estado.datos = await (await fetch("/api/datos")).json();
         await cargarRecorte();
+        await cargarHilo();
         abrir({ tipo: "reporte", id: creado.id });
       });
     }
@@ -811,6 +939,7 @@
     const res = await fetch(`/api/mapa?${q.toString()}`);
     estado.recorte = await res.json();
     llenarAnios();
+    await cargarHilo();
     pintarCapa();
     marcarPuntos();
     if (estado.vista === "mapa" || (estado.seleccionado && estado.seleccionado.tipo === "municipio")) {
@@ -848,6 +977,26 @@
   });
 
   $panel.addEventListener("click", async (ev) => {
+    const ir = ev.target.closest("[data-ir]");
+    if (ir && $panel.contains(ir)) {
+      irVista(ir.dataset.ir);
+      return;
+    }
+    const seguir = ev.target.closest("[data-seguir]");
+    if (seguir && $panel.contains(seguir)) {
+      estado.zonaDane = seguir.dataset.seguir;
+      abrir({ tipo: "municipio", id: estado.zonaDane });
+      return;
+    }
+    const demo = ev.target.closest("[data-recorrido]");
+    if (demo && $panel.contains(demo)) {
+      estado.zonaDane = demo.dataset.recorrido;
+      if (demo.dataset.anio) estado.filtro.anio = demo.dataset.anio;
+      if (demo.dataset.pregunta) estado.q = demo.dataset.pregunta;
+      await cargarRecorte();
+      abrir({ tipo: "municipio", id: estado.zonaDane });
+      return;
+    }
     const ejemplo = ev.target.closest("[data-pregunta]");
     if (ejemplo && $panel.contains(ejemplo)) {
       const pregunta = ejemplo.dataset.pregunta;
@@ -872,6 +1021,7 @@
       }
       estado.datos = await (await fetch("/api/datos")).json();
       await cargarRecorte();
+      await cargarHilo();
       renderPanel();
       return;
     }

@@ -129,3 +129,13 @@
 **Impacto:** `/api/reportes/<id>/revisar`, `/senalar`, `/retirar` y `/confianza`. El panel del reporte muestra la explicación y la última decisión.
 
 **Descartado:** cuentas de moderador, borrado físico, o que tres señalamientos descarten solos el contenido.
+
+## 2026-08-15 — Un hilo, no tres productos pegados
+
+**Decisión:** `/api/recorrido` arma el camino de la Fase 11 (problema → zona → contratos → periodo → reportes → evidencia → relaciones → continuar). El panel muestra ese hilo en Inicio, Zona, Observar y Preguntar. Cambiar de pestaña no borra la zona. Una pregunta puede recortar el periodo y devolver a la zona.
+
+**Motivo:** el criterio es que LADERA se sienta un solo producto. El mapa, el buscador y el formulario no pueden ser islas.
+
+**Impacto:** `producto/recorrido.py` es la fuente del hilo. El frontend centra el municipio y ofrece el siguiente paso. El mapa sigue con el fixture.
+
+**Descartado:** métricas de piloto (Fase 12), SECOP real en el mapa, o un dashboard aparte de moderación.

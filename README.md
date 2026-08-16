@@ -2,7 +2,7 @@
 
 Plataforma de trazabilidad ciudadana: un registro de lo que las personas observan en el territorio, al lado de la contratación pública que normalmente es difícil de recorrer.
 
-Esta versión cubre hasta la **Fase 10** (moderación y confianza). Los contratos del mapa siguen siendo el fixture.
+Esta versión cubre hasta la **Fase 11** (producto integrado). Los contratos del mapa siguen siendo el fixture.
 
 ## Cómo correrlo
 
@@ -37,6 +37,7 @@ python -m pipeline.processing.resolver
 7. Un reporte en Medellín sobre el muro de El Popular debe mostrar una **posible relación** con FIX-X, distinta de una **relación confirmada**. Se puede confirmar, descartar o indicar el contrato a mano.
 8. **Mapa**: enciende y apaga contratos, reportes y dinero. Cambia el periodo a 2024, 2025 o 2026. Medellín en 2026 tiene contrato + reporte; en 2024, contrato sin reporte. Eso no demuestra causa. El panel del municipio resume cifra usable, estados y relaciones.
 9. **Confianza**: abre un reporte y lee «¿Por qué este estado?». Señala, retira o registra una decisión con motivo. Verificar no declara irregularidad. Lo descartado o retirado sale del mapa.
+10. **Un hilo**: Inicio → El Popular. Debes ver zona, periodo 2026, contrato, reporte y la posible relación en el mismo panel. Desde ahí se agrega evidencia sin perder la zona. Preguntar y observar no reinician el recorrido.
 
 ## Datos
 

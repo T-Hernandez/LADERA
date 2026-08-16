@@ -24,6 +24,7 @@ from config import (  # noqa: E402
     REPORTES_LOCALES,
 )
 from busqueda import buscar  # noqa: E402
+from producto.recorrido import armar_recorrido  # noqa: E402
 from mapa.capas import recorte_territorial  # noqa: E402
 from modelo import ModeloInvalido, reporte, validar_conjunto  # noqa: E402
 from relaciones.almacen import (  # noqa: E402
@@ -121,7 +122,7 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 10})
+    return jsonify({"ok": True, "fase": 11})
 
 
 @app.get("/api/datos")
@@ -140,6 +141,24 @@ def api_mapa():
         estado = (request.args.get("estado") or "").strip() or None
         datos = ensamblar_datos()
         return jsonify(recorte_territorial(datos, anio=anio, estado=estado))
+    except (TypeError, ValueError):
+        return jsonify({"error": "anio debe ser un número"}), 400
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.get("/api/recorrido")
+def api_recorrido():
+    dane = str(request.args.get("dane") or "").strip() or None
+    pregunta = str(request.args.get("pregunta") or "").strip() or None
+    anio_crudo = (request.args.get("anio") or "").strip()
+    estado = (request.args.get("estado") or "").strip() or None
+    try:
+        anio = int(anio_crudo) if anio_crudo else None
+        datos = ensamblar_datos()
+        return jsonify(
+            armar_recorrido(datos, dane, anio=anio, estado=estado, pregunta=pregunta)
+        )
     except (TypeError, ValueError):
         return jsonify({"error": "anio debe ser un número"}), 400
     except ModeloInvalido as exc:

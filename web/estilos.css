@@ -215,6 +215,38 @@ html, body {
 .panel h1 { font-size: 1.7rem; }
 .panel h2 { font-size: 1.25rem; margin-top: 28px; }
 
+.hilo {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--linea);
+}
+
+.hilo-zona {
+  margin: 0 0 8px;
+  color: var(--foco);
+  font-size: 0.9rem;
+}
+
+.hilo ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+
+.hilo li {
+  border: 1px solid var(--linea);
+  padding: 3px 7px;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.hilo li.listo { color: var(--papel); border-color: var(--contrato); }
+.hilo li.aqui { color: var(--tinta); background: var(--oro); border-color: var(--oro); }
+
 .kicker {
   margin: 0 0 6px;
   color: var(--oro);
