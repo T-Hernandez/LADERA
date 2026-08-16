@@ -7,6 +7,7 @@ from datetime import date
 from mapa.capas import contrato_en_estado
 from modelo.constantes import ESTADOS_REPORTE_VISIBLES
 from modelo.texto import norm_busqueda
+from relaciones.motor import mismo_territorio, tiempo_compatible
 
 
 def _fecha(valor) -> date | None:
@@ -58,8 +59,20 @@ def _texto_reporte(r: dict) -> str:
 
 
 def _contiene(texto: str, needles: str) -> bool:
+    """Coincidencia parcial razonable: alcanza con la mayoría de las palabras, no todas.
+
+    Una pregunta larga en lenguaje natural rara vez aparece completa, palabra
+    por palabra, en el objeto formal de un contrato — exigir todas las
+    palabras devolvía cero resultados con preguntas legítimas. Se sigue
+    exigiendo evidencia real (las palabras sí tienen que estar en el texto),
+    solo se relaja cuántas hacen falta.
+    """
     cuerpo = norm_busqueda(texto)
-    return all(tok in cuerpo for tok in norm_busqueda(needles).split() if tok)
+    tokens = [tok for tok in norm_busqueda(needles).split() if tok]
+    if not tokens:
+        return True
+    coincidencias = sum(1 for tok in tokens if tok in cuerpo)
+    return coincidencias >= max(1, (len(tokens) + 1) // 2)
 
 
 def _pares_relacion(datos: dict, modo) -> set[tuple[str, str]]:
@@ -115,7 +128,8 @@ def ejecutar(datos: dict, filtros: dict) -> dict:
             continue
         reportes.append(r)
 
-    pares = _pares_relacion(datos, True)
+    # con_relacion: existe una RELACIÓN explícita registrada (sugerida o
+    # confirmada por el motor/una persona) entre el contrato y el reporte.
     if filtros.get("con_relacion"):
         pares = _pares_relacion(datos, filtros["con_relacion"])
         ids_c_rel = {c for c, _ in pares}
@@ -123,12 +137,19 @@ def ejecutar(datos: dict, filtros: dict) -> dict:
         contratos = [c for c in contratos if c["id"] in ids_c_rel]
         reportes = [r for r in reportes if r["id"] in ids_r_rel]
 
+    # con_reportes: el contrato tiene reportes ciudadanos en su mismo contexto
+    # territorial y temporal — NO exige que exista ya una relación registrada.
+    # Mismo criterio (mismo_territorio + tiempo_compatible) que usa el motor
+    # para decidir si vale la pena sugerir una relación en primer lugar.
     if filtros.get("con_reportes"):
-        ids_r = {r["id"] for r in reportes}
-        ids_c_con_rep = {c for c, rid in pares if rid in ids_r}
-        contratos = [c for c in contratos if c["id"] in ids_c_con_rep]
-        ids_c = {c["id"] for c in contratos}
-        reportes = [r for r in reportes if r["id"] in {rid for cid, rid in pares if cid in ids_c}]
+        contratos = [
+            c for c in contratos
+            if any(mismo_territorio(r, c) and tiempo_compatible(r, c) for r in reportes)
+        ]
+        reportes = [
+            r for r in reportes
+            if any(mismo_territorio(r, c) and tiempo_compatible(r, c) for c in contratos)
+        ]
 
     fuentes = []
     vistos = set()

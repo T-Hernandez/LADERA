@@ -79,7 +79,7 @@ def _texto_contrato(contrato: dict) -> str:
     )
 
 
-def _mismo_territorio(reporte: dict, contrato: dict) -> bool:
+def mismo_territorio(reporte: dict, contrato: dict) -> bool:
     return (reporte.get("ubicacion") or {}).get("dane") == contrato.get("municipio_dane")
 
 
@@ -94,7 +94,7 @@ def _lugar_especifico(reporte: dict, contrato: dict) -> bool:
     return any(tok in cuerpo for tok in _tokens(detalle))
 
 
-def _tiempo_compatible(reporte: dict, contrato: dict) -> bool:
+def tiempo_compatible(reporte: dict, contrato: dict) -> bool:
     obs = _fecha(reporte.get("fecha_observacion"))
     if obs is None:
         return False
@@ -130,11 +130,11 @@ def _id_par(reporte_id: str, contrato_id: str) -> str:
 
 def puntuar_par(reporte: dict, contrato: dict) -> dict | None:
     """Si hay señales suficientes, devuelve un dict listo para relacion(). Si no, None."""
-    if not _mismo_territorio(reporte, contrato):
+    if not mismo_territorio(reporte, contrato):
         return None
 
     lugar = _lugar_especifico(reporte, contrato)
-    tiempo = _tiempo_compatible(reporte, contrato)
+    tiempo = tiempo_compatible(reporte, contrato)
     categoria = _categoria_en_objeto(reporte, contrato)
     sim = _similitud(reporte, contrato)
     semantica = categoria or sim >= 0.12

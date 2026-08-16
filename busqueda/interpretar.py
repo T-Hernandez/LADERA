@@ -15,9 +15,12 @@ CATEGORIAS = (
     ("inconclusa", "OBRA_INCONCLUSA"),
     ("inconcluso", "OBRA_INCONCLUSA"),
     ("obra deteriorada", "OBRA_DETERIORADA"),
+    ("obras deterioradas", "OBRA_DETERIORADA"),
     ("deteriorada", "OBRA_DETERIORADA"),
     ("no visible", "OBRA_NO_VISIBLE"),
     ("problema persistente", "PROBLEMA_PERSISTENTE"),
+    ("problemas persistentes", "PROBLEMA_PERSISTENTE"),
+    ("persistente", "PROBLEMA_PERSISTENTE"),
     ("riesgo", "RIESGO"),
 )
 
@@ -30,6 +33,7 @@ STOP_TEXTO = frozenset(
         "reportes",
         "reporte",
         "ciudadanos",
+        "ciudadana",
         "que",
         "hay",
         "con",
@@ -50,6 +54,46 @@ STOP_TEXTO = frozenset(
         "relacionados",
         "relacionado",
         "relacionadas",
+        # conectores y palabras de pregunta que no aportan filtro
+        "podria",
+        "podrian",
+        "puede",
+        "pueden",
+        "estar",
+        "estan",
+        "esten",
+        "haya",
+        "hayan",
+        "existe",
+        "existen",
+        "cuales",
+        "cual",
+        "quiero",
+        "quisiera",
+        "necesito",
+        "busco",
+        "saber",
+        "conocer",
+        "informacion",
+        "dame",
+        "dime",
+        "favor",
+        "porfavor",
+        "gracias",
+        "sobre",
+        "cerca",
+        "alguna",
+        "algun",
+        "algunos",
+        "algunas",
+        "todos",
+        "todas",
+        "hola",
+        "buenas",
+        "buenos",
+        "dias",
+        "tardes",
+        "noches",
     }
 )
 
@@ -164,12 +208,15 @@ def interpretar(
         partes.append("con relación registrada")
     if filtros["texto"]:
         partes.append(f"texto «{filtros['texto']}»")
-    explicacion = (
-        "Se interpretó así: " + "; ".join(partes) + "."
-        if partes
-        else "No se reconocieron filtros; se busca el texto en el conjunto analizado."
-    )
-    if not partes and pregunta.strip():
-        filtros["texto"] = norm_busqueda(pregunta)
-        explicacion = f"Búsqueda por texto en el conjunto analizado: «{filtros['texto']}»."
-    return {"filtros": filtros, "metodo": "REGLAS", "explicacion": explicacion}
+    if partes:
+        explicacion = "Se interpretó así: " + "; ".join(partes) + "."
+        suficiente = True
+    else:
+        # No se inventa un filtro de texto con la pregunta completa: una frase
+        # larga en lenguaje natural rara vez aparece literal en un contrato,
+        # y eso producía "0 resultados" sin explicación. Se dice claramente
+        # que no se identificó nada, en vez de correr una búsqueda inútil.
+        filtros["texto"] = None
+        explicacion = "No pude identificar filtros suficientes. Puedes precisar municipio, año, estado o tema."
+        suficiente = False
+    return {"filtros": filtros, "metodo": "REGLAS", "explicacion": explicacion, "suficiente": suficiente}
