@@ -35,7 +35,10 @@ SECOP II:
 - dónde se localiza una obra por debajo del nivel municipal cuando esa
   información aparece literalmente en el objeto contractual;
 - qué fragmento del contrato respalda cada ubicación mostrada;
-- cómo llegar al registro original para verificarlo.
+- cómo llegar al registro original para verificarlo;
+- qué contratos del conjunto analizado responden a una pregunta
+  formulada en lenguaje cotidiano, sin exigir jerga de contratación
+  pública.
 
 LADERA no demuestra corrupción, ausencia absoluta de inversión ni ejecución
 real de una obra. Produce señales verificables y puntos de partida para
@@ -70,6 +73,11 @@ simultáneamente estas condiciones:
 - [ ] Cada lugar permite llegar a la fuente original.
 - [ ] Las limitaciones metodológicas están visibles.
 - [ ] Ningún texto en pantalla afirma más de lo que los datos permiten.
+- [ ] Existe una búsqueda sobre el conjunto analizado: por palabras
+      clave si la IA no está disponible, y por pregunta en lenguaje
+      cotidiano cuando sí lo está.
+- [ ] Cada resultado de búsqueda apunta a un contrato ya curado y a
+      su fuente original.
 
 ### Demostración
 
@@ -99,6 +107,8 @@ Las siguientes decisiones están cerradas:
 - mapa: Leaflet + GeoJSON local;
 - intercambio datos/frontend: `web/assets/datos.json`;
 - IA: solo donde las reglas determinísticas no bastan;
+- búsqueda: recorre únicamente el conjunto ya curado; no descarga,
+  no inventa contratos y no consulta fuentes externas;
 - ubicación submunicipal: únicamente con fragmento literal verificable;
 - ausencia: "sin contratación identificada en los contratos analizados",
   nunca "sin inversión";
@@ -177,6 +187,24 @@ El modelo:
 * no aporta conocimiento externo.
 
 Solo puede estructurar información que ya existe en el texto.
+
+En la búsqueda ocurre lo mismo: el modelo puede traducir una pregunta
+cotidiana a filtros o términos, y puede señalar por qué un contrato
+ya existente parece pertinente. No puede:
+
+* inventar un contrato que no esté en `datos.json`;
+* afirmar que "no hay inversión" porque la búsqueda no halló nada;
+* concluir irregularidad, abandono o corrupción;
+* ampliar el universo más allá de los contratos analizados.
+
+Toda coincidencia mostrada debe sobrevivir esta prueba:
+
+```text
+el resultado ∈ conjunto curado
+AND el fragmento que justifica la coincidencia ∈ texto original
+```
+
+Si falla, se descarta.
 
 Toda extracción de ubicación debe sobrevivir esta prueba:
 
@@ -277,6 +305,9 @@ Contrato de integración
     ↓
 FASE 7
 Datos reales en pantalla
+    ↓
+FASE 7B
+Búsqueda asistida
     ↓
 FASE 8
 Verificación independiente
@@ -448,7 +479,9 @@ Construir:
 2. resumen;
 3. ficha de municipio;
 4. lista de lugares;
-5. limitaciones.
+5. limitaciones;
+6. caja de búsqueda sobre el conjunto analizado, usable con
+   palabras clave aunque la IA no esté disponible.
 
 ## Datos ficticios mínimos
 
@@ -474,6 +507,8 @@ Tres estados visibles
 Calamidad visible
 +
 Lista de lugares
++
+Búsqueda por palabras clave sobre el fixture
 ```
 
 ## Criterio de aceptación
@@ -1004,6 +1039,180 @@ El frontend no debe:
 
 ---
 
+# FASE 7B — Búsqueda asistida de contratos
+
+## Objetivo
+
+Permitir que una persona sin jerga de contratación pública encuentre,
+dentro del conjunto ya analizado, los contratos que responden a una
+pregunta cotidiana.
+
+La búsqueda no amplía LADERA. Hace legible el mismo universo que el
+mapa ya muestra.
+
+Preguntas que debe poder recibir:
+
+```text
+¿Hay obras de contención en Medellín?
+¿Qué contratos mencionan una quebrada?
+¿Dónde se citó urgencia manifiesta?
+muros de contención después de 2022
+```
+
+La persona no necesita saber cómo se llama un campo en SECOP II.
+
+## Por qué existe
+
+SECOP II es público, pero en la práctica es opaco: hay que conocer
+filtros, vocabularios y códigos. LADERA ya curó un subconjunto
+verificable. La búsqueda es el puente entre esa curaduría y una
+pregunta formulada como la haría un vecino, un periodista o un
+concejal.
+
+No es un chatbot. No investiga por la persona. Devuelve contratos
+ya existentes y el camino de vuelta a la fuente.
+
+## Arquitectura
+
+Dos capas. La segunda puede apagarse.
+
+```text
+pregunta de la persona
+    ↓
+1. BÚSQUEDA DETERMINÍSTICA  (siempre)
+   palabras clave, municipio, año, calamidad, objeto
+    ↓
+2. INTERPRETACIÓN CON IA    (opcional)
+   traduce la pregunta a filtros y términos
+   sobre el mismo conjunto
+    ↓
+resultados ⊆ datos.json
+    ↓
+cada resultado muestra:
+   municipio + fragmento literal + enlace a SECOP
+```
+
+La red de SECOP no se toca. No se vuelve a descargar. No se consulta
+nada que no esté ya en `datos.json` o en los CSV curados.
+
+## Implementar
+
+### Interfaz
+
+En el panel, no como una pantalla aparte:
+
+* un campo de pregunta;
+* ejemplos visibles de preguntas válidas;
+* lista de resultados con municipio, año, monto si existe y
+  fragmento que justifica la coincidencia;
+* clic en un resultado = seleccionar ese municipio en el mapa
+  y abrir la ficha;
+* enlace a la fuente original en cada resultado;
+* aviso metodológico: la búsqueda recorre solo los contratos
+  analizados, no todo SECOP.
+
+### Capa determinística
+
+Obligatoria. Debe funcionar sin clave de modelo.
+
+Busca en:
+
+* nombre de municipio;
+* objeto / fragmento;
+* marcas de calamidad;
+* año;
+* términos ya normalizados en `config.py`.
+
+### Capa de IA
+
+Solo si la capa determinística no basta para interpretar la
+pregunta.
+
+El modelo puede:
+
+* extraer municipio, año, tema y si se pide calamidad;
+* proponer términos equivalentes que ya existan en el
+  vocabulario de `config.py`;
+* elegir, entre coincidencias reales, cuáles mostrar primero;
+* devolver el fragmento literal que hace pertinente el
+  resultado.
+
+El modelo no puede:
+
+* inventar un `id_contrato`;
+* completar un objeto contractual;
+* afirmar un municipio que no esté en el resultado;
+* decir que "no hubo inversión" si la lista queda vacía;
+* responder con conocimiento externo ("en 2022 hubo un
+  deslizamiento en…").
+
+Si la lista queda vacía, el texto es:
+
+```text
+No se encontraron contratos identificados en el conjunto
+analizado que coincidan con esta pregunta.
+```
+
+Nunca:
+
+```text
+No hay inversión
+No se contrataron obras
+```
+
+### Verificación de cada resultado
+
+Antes de mostrar un resultado producido o reordenado por el modelo:
+
+```text
+id_contrato ∈ datos.json
+    ↓
+fragmento ∈ objeto o texto original
+    ↓
+¿existe?
+    ├── sí → mostrar
+    └── no → descartar
+```
+
+## Salida obligatoria
+
+```text
+Campo de búsqueda usable
++
+Resultados solo del conjunto curado
++
+Fragmento literal por coincidencia
++
+Enlace a SECOP
++
+Degradación a palabras clave si falla la IA
+```
+
+## Criterio de aceptación
+
+Una persona ajena al proyecto debe poder escribir una pregunta
+sin jerga y llegar a un contrato verificable, o entender con
+claridad que ese contrato no está en el conjunto analizado.
+
+El mapa y la ficha siguen funcionando si se apaga la capa de IA.
+
+## Punto de decisión
+
+Si la interpretación con IA inventa coincidencias o no sobrevive
+la verificación de fragmento:
+
+```text
+APAGAR LA CAPA DE IA.
+DEJAR SOLO LA BÚSQUEDA POR PALABRAS CLAVE.
+```
+
+No se improvisa un buscador "más inteligente" menos verificable.
+
+La Fase 7B no bloquea la Fase 7. Si falta tiempo, el producto
+se demuestra sin ella.
+
+---
+
 # FASE 8 — Verificación independiente
 
 ## Objetivo
@@ -1151,8 +1360,10 @@ LADERA debe degradarse, no colapsar.
 | Timeout                | no continuar silenciosamente         |
 | Descarga parcial       | no tratar como conjunto completo     |
 | Cobertura baja         | ajustar filtro localmente            |
-| Sin API de IA          | continuar sin extracción             |
+| Sin API de IA          | continuar sin extracción ni interpretación de búsqueda |
 | Lote de IA falla       | registrar y continuar                |
+| Búsqueda IA falla      | degradar a palabras clave            |
+| Búsqueda sin coincidencias | decir "no hay coincidencia en el conjunto analizado", nunca "no hay inversión" |
 | Fragmento inexistente  | descartar respuesta                  |
 | IA alucina demasiado   | apagar extracción                    |
 | Valor absurdo          | excluir o enviar a revisión          |
@@ -1174,8 +1385,8 @@ MARCA DE CALAMIDAD
 LIMITACIONES
 ```
 
-La extracción submunicipal mejora el producto, pero no puede convertirse en un
-punto único de fallo.
+La extracción submunicipal y la búsqueda asistida mejoran el producto,
+pero no pueden convertirse en un punto único de fallo.
 
 ---
 
@@ -1203,7 +1414,8 @@ Responsable de:
 * `web/index.html`;
 * `web/estilos.css`;
 * `web/app.js`;
-* `web/servidor.py`.
+* `web/servidor.py`;
+* la caja de búsqueda y su degradación a palabras clave.
 
 Empieza inmediatamente con datos ficticios.
 
@@ -1220,6 +1432,7 @@ Responsable de:
 * pruebas;
 * verificación contra SECOP;
 * selección independiente de casos;
+* verificación de que la búsqueda no inventa coincidencias;
 * narrativa;
 * demo.
 
@@ -1315,6 +1528,9 @@ Evitar commits gigantes que mezclen:
 * [ ] lugares muestran evidencia.
 * [ ] enlaces abren la fuente.
 * [ ] limitaciones son visibles.
+* [ ] la búsqueda por palabras clave funciona sin IA.
+* [ ] la búsqueda asistida, si está encendida, solo devuelve
+      contratos del conjunto curado con fragmento verificable.
 
 ## Demo
 
@@ -1376,7 +1592,8 @@ Mapa visible
 
 * mapa;
 * estados;
-* panel.
+* panel;
+* caja de búsqueda por palabras clave.
 
 ### C
 
@@ -1484,7 +1701,9 @@ necesaria para que el mapa funcione.
 
 ### B
 
-* reemplazar fixture por datos reales.
+* reemplazar fixture por datos reales;
+* comprobar que la búsqueda por palabras clave sigue
+  funcionando con el JSON real.
 
 ### C
 
@@ -1497,6 +1716,10 @@ La aplicación completa funciona con datos reales.
 ```
 
 Este es el punto más importante del proyecto.
+
+Si ese checkpoint se cumple y sobra tiempo, B conecta la
+interpretación con IA (Fase 7B). Si no, la búsqueda se queda
+en palabras clave. No se retrasa la verificación por esto.
 
 ---
 
@@ -1564,17 +1787,18 @@ Cuando falte tiempo:
 ## P1 — Muy importante
 
 8. Extracción submunicipal verificable.
-9. Casos destacados.
-10. Solicitud de información.
-11. Narrativa pulida.
+9. Búsqueda asistida sobre el conjunto analizado.
+10. Casos destacados.
+11. Solicitud de información.
+12. Narrativa pulida.
 
 ## P2 — Solo si todo lo anterior funciona
 
-12. Animaciones.
-13. Explicaciones generadas.
-14. Refinamiento visual adicional.
-15. Métricas extra.
-16. Nuevas capas.
+13. Animaciones.
+14. Explicaciones generadas.
+15. Refinamiento visual adicional.
+16. Métricas extra.
+17. Nuevas capas.
 
 La regla es simple:
 
@@ -1618,6 +1842,15 @@ Sin fragmento:
 ```text
 NO ENTRA.
 ```
+
+### Dejar que la búsqueda invente o sentencie
+
+La búsqueda no es una autoridad. Si el modelo propone un contrato
+que no está en el conjunto, o un fragmento que no aparece en el
+texto, el resultado no se muestra.
+
+Una lista vacía significa "no hay coincidencia en lo analizado".
+No significa "no hubo obra" ni "no hubo inversión".
 
 ### Esperar a los datos para construir la interfaz
 
