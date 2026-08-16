@@ -215,6 +215,14 @@ html, body {
 .panel h1 { font-size: 1.7rem; }
 .panel h2 { font-size: 1.25rem; margin-top: 28px; }
 
+.piloto {
+  margin: 28px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--linea);
+}
+
+.piloto h2 { margin-top: 0; }
+
 .hilo {
   margin: 0 0 20px;
   padding: 12px 14px;

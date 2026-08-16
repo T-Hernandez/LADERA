@@ -61,7 +61,7 @@ class TestApi(unittest.TestCase):
         cuerpo = res.get_json()
         self.assertIn("FIX-X", cuerpo["contrato_ids"])
         self.assertEqual(len(cuerpo["pasos"]), 8)
-        self.assertEqual(client.get("/api/salud").get_json()["fase"], 11)
+        self.assertEqual(client.get("/api/salud").get_json()["fase"], 12)
 
 
 if __name__ == "__main__":

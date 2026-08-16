@@ -19,11 +19,14 @@ from config import (  # noqa: E402
     GEOJSON_MUNICIPIOS,
     HOST,
     LOOKUP_MUNICIPIOS,
+    PILOTO_EVENTOS,
     PUERTO,
     RELACIONES_LOCALES,
     REPORTES_LOCALES,
 )
 from busqueda import buscar  # noqa: E402
+from piloto.eventos import registrar_evento  # noqa: E402
+from piloto.metricas import resumir_piloto  # noqa: E402
 from producto.recorrido import armar_recorrido  # noqa: E402
 from mapa.capas import recorte_territorial  # noqa: E402
 from modelo import ModeloInvalido, reporte, validar_conjunto  # noqa: E402
@@ -122,7 +125,7 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 11})
+    return jsonify({"ok": True, "fase": 12, "territorio": "Antioquia"})
 
 
 @app.get("/api/datos")
@@ -165,6 +168,33 @@ def api_recorrido():
         return jsonify({"error": str(exc)}), 500
 
 
+@app.get("/api/piloto")
+def api_piloto():
+    try:
+        datos = ensamblar_datos()
+        return jsonify(
+            resumir_piloto(datos, ruta_eventos=PILOTO_EVENTOS, ruta_auditoria=AUDITORIA_LOCAL)
+        )
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.post("/api/piloto/evento")
+def api_piloto_evento():
+    cuerpo = request.get_json(silent=True) or {}
+    try:
+        evento = registrar_evento(
+            accion=str(cuerpo.get("accion") or "").strip(),
+            sesion=str(cuerpo.get("sesion") or "").strip() or None,
+            objeto=cuerpo.get("objeto") if isinstance(cuerpo.get("objeto"), dict) else {},
+            resultado=str(cuerpo.get("resultado") or "").strip() or None,
+            ruta=PILOTO_EVENTOS,
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(evento), 201
+
+
 @app.post("/api/buscar")
 def api_buscar():
     cuerpo = request.get_json(silent=True) or {}
@@ -181,6 +211,13 @@ def api_buscar():
             _lookup_municipios(),
             dane_zona=dane,
             usar_ia=usar_ia,
+        )
+        registrar_evento(
+            accion="BUSCAR",
+            sesion=str(cuerpo.get("sesion") or "").strip() or None,
+            objeto={"pregunta": pregunta, "dane": dane},
+            resultado=f"{len(resultado.get('contratos') or [])} contratos, {len(resultado.get('reportes') or [])} reportes",
+            ruta=PILOTO_EVENTOS,
         )
         return jsonify(resultado)
     except (ModeloInvalido, ValueError) as exc:
@@ -226,6 +263,13 @@ def api_crear_reporte():
             otros_reportes=list((fixture.get("reportes") or {}).values()),
         )
     except ReporteError as exc:
+        if "parecida" in str(exc):
+            registrar_evento(
+                accion="DUPLICADO",
+                objeto={"dane": cuerpo.get("dane")},
+                resultado=str(exc),
+                ruta=PILOTO_EVENTOS,
+            )
         return jsonify({"error": str(exc)}), 400
     return jsonify(creado), 201
 

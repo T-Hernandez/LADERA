@@ -2,7 +2,7 @@
 
 Plataforma de trazabilidad ciudadana: un registro de lo que las personas observan en el territorio, al lado de la contratación pública que normalmente es difícil de recorrer.
 
-Esta versión cubre hasta la **Fase 11** (producto integrado). Los contratos del mapa siguen siendo el fixture.
+Esta versión cubre hasta la **Fase 12** (piloto territorial en Antioquia). Los contratos del mapa siguen siendo el fixture.
 
 ## Cómo correrlo
 
@@ -38,6 +38,7 @@ python -m pipeline.processing.resolver
 8. **Mapa**: enciende y apaga contratos, reportes y dinero. Cambia el periodo a 2024, 2025 o 2026. Medellín en 2026 tiene contrato + reporte; en 2024, contrato sin reporte. Eso no demuestra causa. El panel del municipio resume cifra usable, estados y relaciones.
 9. **Confianza**: abre un reporte y lee «¿Por qué este estado?». Señala, retira o registra una decisión con motivo. Verificar no declara irregularidad. Lo descartado o retirado sale del mapa.
 10. **Un hilo**: Inicio → El Popular. Debes ver zona, periodo 2026, contrato, reporte y la posible relación en el mismo panel. Desde ahí se agrega evidencia sin perder la zona. Preguntar y observar no reinician el recorrido.
+11. **Piloto**: en Inicio, «Qué mide este piloto». Importa el contraste (reporte útil al lado de un contrato), no el número de usuarios. El alcance sigue siendo Antioquia.
 
 ## Datos
 
@@ -60,5 +61,6 @@ python -m pipeline.processing.resolver
 | Relaciones locales | `data/interim/relaciones_locales.json` |
 | Auditoría | `data/interim/auditoria.json` |
 | Decisiones de reportes | `data/interim/reportes_decisiones.json` |
+| Eventos del piloto | `data/interim/piloto_eventos.json` |
 
 Los contratos reales, cuando existan, salen de SECOP vía datos.gov.co (`jbjy-vk9h`). El enlace de cada hallazgo es el campo `URLProceso`, no una URL inventada.

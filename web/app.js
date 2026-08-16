@@ -16,6 +16,8 @@
     q: "",
     usarIa: false,
     hilo: null,
+    piloto: null,
+    sesion: (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()),
   };
 
   const $panel = document.getElementById("panel-contenido");
@@ -85,6 +87,53 @@
     evidencia: "Agrega una observación en esta zona",
     relaciones: "Contrasta con un contrato o espera una sugerencia",
     continuar: "Otra persona puede seguir contrastando aquí",
+  };
+
+  const registrarEvento = (accion, objeto, resultado) => {
+    fetch("/api/piloto/evento", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        accion,
+        sesion: estado.sesion,
+        objeto: objeto || {},
+        resultado: resultado || "",
+      }),
+    }).catch(() => {});
+  };
+
+  const cargarPiloto = async () => {
+    try {
+      estado.piloto = await (await fetch("/api/piloto")).json();
+    } catch (_err) {
+      estado.piloto = null;
+    }
+  };
+
+  const htmlPiloto = () => {
+    const p = estado.piloto;
+    if (!p || !p.metricas) return "";
+    const t = p.metricas.tiempo_hasta_encontrar_segundos || {};
+    const tiempo = t.mediana == null ? "sin muestras" : `${Math.round(t.mediana)} s (mediana, ${t.n})`;
+    return `
+      <section class="piloto">
+        <h2>Qué mide este piloto</h2>
+        <p class="muted">${escapeHtml(p.alcance.territorio)} · ${escapeHtml(String(p.alcance.municipios))} municipios · no se escala.</p>
+        <p>${escapeHtml(p.pregunta_central)}</p>
+        <p>${escapeHtml(p.lectura)}</p>
+        <div class="cifras">
+          <div class="cifra"><b>${p.metricas.reportes_creados}</b> reportes creados</div>
+          <div class="cifra"><b>${p.metricas.reportes_utiles}</b> reportes útiles</div>
+          <div class="cifra"><b>${p.metricas.reportes_duplicados}</b> duplicados</div>
+          <div class="cifra"><b>${p.metricas.relaciones_sugeridas}</b> relaciones sugeridas</div>
+          <div class="cifra"><b>${p.metricas.relaciones_confirmadas}</b> confirmadas</div>
+          <div class="cifra"><b>${p.metricas.contratos_consultados}</b> contratos consultados</div>
+          <div class="cifra"><b>${p.metricas.busquedas_realizadas}</b> búsquedas</div>
+          <div class="cifra"><b>${escapeHtml(tiempo)}</b> hasta encontrar</div>
+        </div>
+        <p class="aviso">${escapeHtml(p.nota)}</p>
+      </section>
+    `;
   };
 
   const cargarHilo = async () => {
@@ -250,6 +299,10 @@
       if (r) estado.zonaDane = r.ubicacion.dane;
     }
     if (sel) estado.vista = "mapa";
+    if (sel && sel.tipo === "municipio") registrarEvento("ABRIR_ZONA", { tipo: "municipio", id: sel.id });
+    if (sel && (sel.tipo === "contrato" || sel.tipo === "reporte")) {
+      registrarEvento("CONSULTAR", { tipo: sel.tipo, id: sel.id });
+    }
     pintarCapa();
     marcarNav();
     cargarHilo().then(renderPanel);
@@ -378,6 +431,7 @@
         <li><button type="button" class="tarjeta" data-recorrido="05361">Ituango — hay un reporte y no hay relación contractual conocida</button></li>
       </ul>
       <p class="aviso">${escapeHtml(r.nota)}</p>
+      ${htmlPiloto()}
       ${listaConfianza()}
     `;
   };
@@ -777,6 +831,7 @@
         pregunta,
         dane: estado.zonaDane,
         usar_ia: !!estado.usarIa,
+        sesion: estado.sesion,
       }),
     });
     const cuerpo = await res.json();
@@ -785,6 +840,7 @@
     } else {
       estado.busqueda = cuerpo;
       await aplicarHiloDesdeBusqueda(cuerpo);
+      await cargarPiloto();
     }
     renderPanel();
   };
@@ -1053,10 +1109,12 @@
     fetch("/api/datos").then((r) => r.json()),
     fetch("/assets/municipios_antioquia.geojson").then((r) => r.json()),
     fetch("/api/mapa").then((r) => r.json()),
+    fetch("/api/piloto").then((r) => r.json()),
   ])
-    .then(([datos, geojson, recorte]) => {
+    .then(([datos, geojson, recorte, piloto]) => {
       estado.datos = datos;
       estado.recorte = recorte;
+      estado.piloto = piloto;
       iniciarMapa(geojson);
       llenarAnios();
       pintarLeyenda();

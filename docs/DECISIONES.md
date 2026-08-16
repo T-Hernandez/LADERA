@@ -139,3 +139,13 @@
 **Impacto:** `producto/recorrido.py` es la fuente del hilo. El frontend centra el municipio y ofrece el siguiente paso. El mapa sigue con el fixture.
 
 **Descartado:** métricas de piloto (Fase 12), SECOP real en el mapa, o un dashboard aparte de moderación.
+
+## 2026-08-15 — El piloto mide contraste, no usuarios
+
+**Decisión:** el alcance sigue siendo Antioquia (125 municipios, obras SECOP II desde 2019 en la ingesta). `/api/piloto` resume reportes creados, útiles, duplicados, relaciones, contratos consultados, búsquedas y el tiempo hasta encontrar. Un reporte útil es el que queda al lado de un contrato y no está descartado. `usuarios` va en `null`.
+
+**Motivo:** la Fase 12 pregunta si la plataforma permitió contrastar lo que antes era difícil de relacionar. Escalar el territorio es la Fase 13.
+
+**Impacto:** Inicio muestra el recuadro del piloto. Buscar y abrir un contrato o zona dejan un evento en `piloto_eventos.json`. El mapa no cambia de fuente.
+
+**Descartado:** contar personas, abrir el país, o pintar SECOP real.

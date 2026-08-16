@@ -18,6 +18,13 @@ REPORTE_MIN_DESCRIPCION = 20
 REPORTE_MAX_POR_HORA = 5
 REPORTE_VENTANA_DUPLICADO_HORAS = 24
 SENALAMIENTOS_PARA_REVISION = 3
+PILOTO_TERRITORIO = "Antioquia"
+PILOTO_MUNICIPIOS = 125
+PILOTO_UNIVERSO = (
+    "obras de SECOP II en Antioquia con firma desde 2019 (ingesta); "
+    "el mapa sigue mostrando el fixture"
+)
+PILOTO_EVENTOS = RAIZ / "data" / "interim" / "piloto_eventos.json"
 DIR_RAW = RAIZ / "data" / "raw"
 DIR_METADATA = RAIZ / "data" / "metadata"
 MANIFIESTO = DIR_METADATA / "ingestion_manifest.json"
