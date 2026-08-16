@@ -250,6 +250,20 @@ html, body {
   color: var(--tinta);
 }
 
+.chip-degradado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.degradado-dinero {
+  display: inline-block;
+  width: 44px;
+  height: 9px;
+  background: linear-gradient(to right, #d9d2c4, #3f6b52);
+  border: 1px solid var(--tinta);
+}
+
 .chip-vacio::before,
 .chip-contrato::before,
 .chip-reporte::before,

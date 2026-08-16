@@ -43,8 +43,8 @@
     BORRADOR: "Borrador",
     PUBLICADO: "Publicado",
     EN_REVISION: "En revisión",
-    RELACIONADO: "Relacionado",
-    VERIFICADO: "Verificado",
+    RELACIONADO: "Con posible conexión",
+    VERIFICADO: "Revisada",
     DESCARTADO: "Descartado",
     RETIRADO: "Retirado",
   };
@@ -333,7 +333,9 @@
 
   const colorDinero = (plata, max) => {
     if (!plata || !max) return "#d9d2c4";
-    const t = Math.min(1, plata / max);
+    // Escala logarítmica: con datos reales, un municipio con mucha más plata que
+    // el resto dejaba a todos los demás casi del mismo tono con una escala lineal.
+    const t = Math.min(1, Math.log1p(plata) / Math.log1p(max));
     const r = Math.round(217 + (63 - 217) * t);
     const g = Math.round(210 + (107 - 210) * t);
     const b = Math.round(196 + (82 - 196) * t);
@@ -410,8 +412,16 @@
     if (estado.capas.contratos) chips.push('<span class="chip chip-contrato">contratos</span>');
     if (estado.capas.reportes) chips.push('<span class="chip chip-reporte">reportes</span>');
     if (estado.capas.contratos && estado.capas.reportes) chips.push('<span class="chip chip-ambos">ambos</span>');
-    if (estado.capas.dinero) chips.push('<span class="chip chip-contrato">más cifra usable</span>');
     caja.innerHTML = chips.join("");
+    if (estado.capas.dinero) {
+      caja.insertAdjacentHTML(
+        "beforeend",
+        `<span class="chip chip-degradado">
+           <span class="degradado-dinero" aria-hidden="true"></span>
+           menos → más cifra usable
+         </span>`
+      );
+    }
   };
 
   const marcarPuntos = () => {
@@ -736,6 +746,7 @@
       <p>${plata(c.valor)}${c.valor_motivo ? ` <span class="muted">(${escapeHtml(c.valor_motivo)})</span>` : ""}</p>
       <p class="muted">${escapeHtml(c.fecha_inicio || "sin inicio")} → ${escapeHtml(c.fecha_fin || "sin fin")}</p>
       ${fuente}
+      ${bloqueProcedencia(c)}
       ${lugares ? `<h2>Lugares con fragmento</h2><ul class="lista">${lugares}</ul>` : ""}
       <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(c.municipio_dane)}">Volver a la zona ${escapeHtml(c.municipio_nombre)}</button></p>
       <h2>Reportes en contraste</h2>
@@ -823,6 +834,32 @@
         <button type="submit">Indicar este contrato</button>
       </form>
       ${formulariosConfianza(r)}
+    `;
+  };
+
+  const VALOR_CLASE_TEXTO = {
+    UTILIZABLE: "La cifra viene tal como está en el registro público.",
+    NO_UTILIZABLE: "La cifra no se pudo usar tal como llegó — no se reemplazó por una estimación.",
+    REVISAR: "La cifra quedó marcada para revisar a mano; no se usó sin más.",
+  };
+  const RESOLUCION_TEXTO = {
+    OBJETO: "El municipio se identificó porque el texto del contrato lo menciona explícitamente.",
+    CIUDAD_ENTIDAD: "El municipio salió del campo de ciudad del registro, no del texto del contrato.",
+    MULTIMUNICIPIO: "El texto del contrato menciona más de un municipio a la vez.",
+    AMBIGUO: "El nombre de la ciudad coincide con más de un municipio; no se eligió uno al azar.",
+    SIN_RESOLVER: "No fue posible identificar un municipio único con la información disponible.",
+  };
+
+  const bloqueProcedencia = (c) => {
+    const partes = [];
+    if (c.valor_clase) partes.push(VALOR_CLASE_TEXTO[c.valor_clase] || c.valor_clase);
+    if (c.resolucion_territorial) partes.push(RESOLUCION_TEXTO[c.resolucion_territorial] || c.resolucion_territorial);
+    if (!partes.length) return "";
+    return `
+      <section class="confianza">
+        <h2>Procedencia de la cifra y el territorio</h2>
+        ${partes.map((p) => `<p class="muted">${escapeHtml(p)}</p>`).join("")}
+      </section>
     `;
   };
 

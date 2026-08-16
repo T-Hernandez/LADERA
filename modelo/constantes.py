@@ -47,3 +47,10 @@ TIPOS_RELACION = frozenset(
 METODOS_RELACION = frozenset({"DIRECTA", "REGLAS", "IA", "MANUAL"})
 ESTADOS_RELACION = frozenset({"SUGERIDA", "CONFIRMADA", "DESCARTADA"})
 SENALES_RELACION = frozenset({"TERRITORIAL", "TEMPORAL", "SEMANTICA"})
+
+# Clasificación de calidad que ya calcula pipeline/processing/curar.py (Fase 4)
+VALOR_CLASE = frozenset({"UTILIZABLE", "NO_UTILIZABLE", "REVISAR"})
+# Clasificación que ya calcula pipeline/processing/resolver.py (Fase 5)
+RESOLUCION_TERRITORIO = frozenset(
+    {"OBJETO", "CIUDAD_ENTIDAD", "MULTIMUNICIPIO", "AMBIGUO", "SIN_RESOLVER"}
+)

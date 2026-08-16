@@ -181,6 +181,56 @@ class TestEntidades(unittest.TestCase):
         self.assertEqual(rel["estado"], "SUGERIDA")
         self.assertEqual(rel["metodo"], "REGLAS")
 
+    def test_relacion_lleva_senales_reales(self):
+        rel = relacion(
+            id="REL-2",
+            origen={"tipo": "reporte", "id": "R-1"},
+            destino={"tipo": "contrato", "id": "C-1"},
+            tipo_relacion="COMPUESTA",
+            metodo="REGLAS",
+            estado="SUGERIDA",
+            evidencia="mismo municipio y periodo compatible",
+            creado_en="2026-01-01T00:00:00Z",
+            senales=["TERRITORIAL", "TEMPORAL"],
+            ids_contrato={"C-1"},
+            ids_reporte={"R-1"},
+        )
+        self.assertEqual(rel["senales"], ["TEMPORAL", "TERRITORIAL"])
+
+    def test_relacion_senal_no_permitida_se_rechaza(self):
+        with self.assertRaises(ModeloInvalido):
+            relacion(
+                id="REL-3",
+                origen={"tipo": "reporte", "id": "R-1"},
+                destino={"tipo": "contrato", "id": "C-1"},
+                tipo_relacion="TERRITORIAL",
+                metodo="REGLAS",
+                estado="SUGERIDA",
+                evidencia="mismo municipio",
+                creado_en="2026-01-01T00:00:00Z",
+                senales=["INVENTADA"],
+                ids_contrato={"C-1"},
+                ids_reporte={"R-1"},
+            )
+
+    def test_contrato_lleva_procedencia(self):
+        c = _base_contrato(valor_clase="UTILIZABLE", resolucion_territorial="OBJETO")
+        self.assertEqual(c["valor_clase"], "UTILIZABLE")
+        self.assertEqual(c["resolucion_territorial"], "OBJETO")
+
+    def test_contrato_sin_procedencia_queda_en_null(self):
+        c = _base_contrato()
+        self.assertIsNone(c["valor_clase"])
+        self.assertIsNone(c["resolucion_territorial"])
+
+    def test_contrato_valor_clase_no_permitida_se_rechaza(self):
+        with self.assertRaises(ModeloInvalido):
+            _base_contrato(valor_clase="INVENTADA")
+
+    def test_contrato_resolucion_no_permitida_se_rechaza(self):
+        with self.assertRaises(ModeloInvalido):
+            _base_contrato(resolucion_territorial="INVENTADA")
+
 
 class TestConjunto(unittest.TestCase):
     def test_lookup_tiene_125(self):

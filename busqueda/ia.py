@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.error
 import urllib.request
 
 from busqueda.consulta import validar_consulta
+from config import IA_CLAVE, IA_URL
 
 PROMPT = (
     "Devuelve SOLO un JSON con estas claves: territorio, territorio_dane, "
@@ -39,8 +39,8 @@ def _json_de(texto: str) -> dict | None:
 
 
 def interpretar_con_ia(pregunta: str, dane_zona: str | None = None) -> dict | None:
-    clave = os.environ.get("LADERA_IA_CLAVE")
-    url = os.environ.get("LADERA_IA_URL")
+    clave = IA_CLAVE
+    url = IA_URL
     if not clave or not url:
         return None
     contexto = f" Municipio abierto (territorio_dane): {dane_zona}." if dane_zona else ""

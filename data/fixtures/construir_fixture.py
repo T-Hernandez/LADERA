@@ -52,6 +52,8 @@ def main() -> None:
                 "El Popular, comuna 1, municipio de Medellín"
             ),
             municipios_validos=validos,
+            valor_clase="UTILIZABLE",
+            resolucion_territorial="OBJETO",
         ),
         "FIX-Y": contrato(
             id="FIX-Y",
@@ -86,6 +88,8 @@ def main() -> None:
                 "en el sector Niquía, municipio de Bello"
             ),
             municipios_validos=validos,
+            valor_clase="UTILIZABLE",
+            resolucion_territorial="OBJETO",
         ),
         "FIX-Z": contrato(
             id="FIX-Z",
@@ -111,6 +115,8 @@ def main() -> None:
                 "la comuna 8, Medellín. Valor no utilizable en este fixture."
             ),
             municipios_validos=validos,
+            valor_clase="NO_UTILIZABLE",
+            resolucion_territorial="OBJETO",
         ),
     }
 

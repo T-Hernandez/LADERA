@@ -1172,7 +1172,9 @@
           "fuente": "objeto"
         }
       ],
-      "texto_original": "Obras de contención y estabilización de ladera en el barrio El Popular, comuna 1, municipio de Medellín"
+      "texto_original": "Obras de contención y estabilización de ladera en el barrio El Popular, comuna 1, municipio de Medellín",
+      "valor_clase": "UTILIZABLE",
+      "resolucion_territorial": "OBJETO"
     },
     "FIX-Y": {
       "id": "FIX-Y",
@@ -1196,7 +1198,9 @@
           "fuente": "objeto"
         }
       ],
-      "texto_original": "Construcción de obras de drenaje y mitigación de riesgo en el sector Niquía, municipio de Bello"
+      "texto_original": "Construcción de obras de drenaje y mitigación de riesgo en el sector Niquía, municipio de Bello",
+      "valor_clase": "UTILIZABLE",
+      "resolucion_territorial": "OBJETO"
     },
     "FIX-Z": {
       "id": "FIX-Z",
@@ -1214,7 +1218,9 @@
       "municipio_dane": "05001",
       "municipio_nombre": "MEDELLÍN",
       "ubicaciones": [],
-      "texto_original": "Mantenimiento de obras de contención en la ladera de la comuna 8, Medellín. Valor no utilizable en este fixture."
+      "texto_original": "Mantenimiento de obras de contención en la ladera de la comuna 8, Medellín. Valor no utilizable en este fixture.",
+      "valor_clase": "NO_UTILIZABLE",
+      "resolucion_territorial": "OBJETO"
     }
   },
   "reportes": {

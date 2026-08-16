@@ -74,6 +74,8 @@ def fila_a_contrato(fila: dict, validos: set[str]) -> dict:
         ubicaciones=_ubicaciones(fila),
         texto_original=texto,
         municipios_validos=validos,
+        valor_clase=(fila.get("valor_clase") or "").strip() or None,
+        resolucion_territorial=(fila.get("municipio_resolucion") or "").strip() or None,
     )
 
 

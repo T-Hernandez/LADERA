@@ -88,10 +88,9 @@ class TestEjecutar(unittest.TestCase):
             validar_consulta({"contratos": [{"id": "inventado"}]})
 
     def test_sin_ia_sigue_funcionando(self):
-        import os
         from unittest.mock import patch
 
-        with patch.dict(os.environ, {"LADERA_IA_CLAVE": "", "LADERA_IA_URL": ""}):
+        with patch("busqueda.ia.IA_CLAVE", None), patch("busqueda.ia.IA_URL", None):
             out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
         ids_r = {r["id"] for r in out["reportes"]}
@@ -110,6 +109,62 @@ class TestEjecutar(unittest.TestCase):
         self.assertIn("filtros", out)
         self.assertIn("fuentes", out)
         self.assertIn("no significa cero inversión", out["nota"])
+
+
+class _RespuestaFalsa:
+    def __init__(self, cuerpo: bytes):
+        self._cuerpo = cuerpo
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self):
+        return self._cuerpo
+
+
+class TestIA(unittest.TestCase):
+    """interpretar_con_ia: éxito, JSON inválido y fallo de red caen todos a REGLAS."""
+
+    def _con_clave(self):
+        return patch("busqueda.ia.IA_CLAVE", "clave-de-prueba"), patch("busqueda.ia.IA_URL", "https://ia.local/chat")
+
+    def test_ia_exitosa_se_usa(self):
+        p1, p2 = self._con_clave()
+        contenido = json.dumps({"territorio_dane": "05001", "estado_contrato": "ACTIVO"})
+        cuerpo = json.dumps({"choices": [{"message": {"content": contenido}}]}).encode("utf-8")
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+            out = buscar("contratos activos en Medellín", _datos(), _lookup(), usar_ia=True)
+        self.assertEqual(out["interpretacion"]["metodo"], "IA")
+        self.assertEqual(out["interpretacion"]["ia"], "usada")
+        self.assertEqual(out["filtros"]["territorio_dane"], "05001")
+
+    def test_ia_json_invalido_cae_a_reglas(self):
+        p1, p2 = self._con_clave()
+        cuerpo = json.dumps({"choices": [{"message": {"content": "esto no es JSON"}}]}).encode("utf-8")
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+            out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
+        self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
+        self.assertIn("fallo", out["interpretacion"]["ia"])
+
+    def test_ia_campo_no_permitido_cae_a_reglas(self):
+        p1, p2 = self._con_clave()
+        contenido = json.dumps({"contratos": [{"id": "inventado"}]})
+        cuerpo = json.dumps({"choices": [{"message": {"content": contenido}}]}).encode("utf-8")
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+            out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
+        self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
+
+    def test_ia_falla_de_red_cae_a_reglas(self):
+        import urllib.error
+
+        p1, p2 = self._con_clave()
+        with p1, p2, patch("urllib.request.urlopen", side_effect=urllib.error.URLError("sin red")):
+            out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
+        self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
+        self.assertIn("fallo", out["interpretacion"]["ia"])
 
 
 class TestApi(unittest.TestCase):

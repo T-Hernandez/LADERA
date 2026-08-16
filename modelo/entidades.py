@@ -11,10 +11,12 @@ from modelo.constantes import (
     ESTADOS_REPORTE,
     FUENTES,
     METODOS_RELACION,
+    RESOLUCION_TERRITORIO,
     SENALES_RELACION,
     TIPOS_EVIDENCIA,
     TIPOS_EXTREMO,
     TIPOS_RELACION,
+    VALOR_CLASE,
 )
 from modelo.errores import ModeloInvalido
 from modelo.texto import fragmento_en_texto
@@ -100,6 +102,8 @@ def contrato(
     ubicaciones: list[dict],
     texto_original: str,
     municipios_validos: set[str] | None = None,
+    valor_clase: str | None = None,
+    resolucion_territorial: str | None = None,
 ) -> dict:
     ident = _texto(id, "id")
     if fuente not in FUENTES:
@@ -119,6 +123,10 @@ def contrato(
             raise ModeloInvalido("valor debe ser un número >= 0 o null")
         if valor_motivo:
             raise ModeloInvalido("valor utilizable no lleva valor_motivo")
+    if valor_clase is not None and valor_clase not in VALOR_CLASE:
+        raise ModeloInvalido(f"valor_clase no permitido: {valor_clase}")
+    if resolucion_territorial is not None and resolucion_territorial not in RESOLUCION_TERRITORIO:
+        raise ModeloInvalido(f"resolucion_territorial no permitida: {resolucion_territorial}")
 
     texto = _texto(texto_original, "texto_original")
     lugares = [
@@ -144,6 +152,8 @@ def contrato(
         "municipio_nombre": _texto(municipio_nombre, "municipio_nombre"),
         "ubicaciones": lugares,
         "texto_original": texto,
+        "valor_clase": valor_clase,
+        "resolucion_territorial": resolucion_territorial,
     }
 
 

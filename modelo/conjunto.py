@@ -82,7 +82,12 @@ def validar_conjunto(datos: dict, municipios_esperados: int = MUNICIPIOS_ESPERAD
 
     contratos = {}
     for ident, crudo in (datos.get("contratos") or {}).items():
-        c = contrato(**{k: crudo[k] for k in _CAMPOS_CONTRATO}, municipios_validos=validos)
+        c = contrato(
+            **{k: crudo[k] for k in _CAMPOS_CONTRATO},
+            municipios_validos=validos,
+            valor_clase=crudo.get("valor_clase"),
+            resolucion_territorial=crudo.get("resolucion_territorial"),
+        )
         if c["id"] != ident:
             raise ModeloInvalido(f"la clave {ident} no coincide con id={c['id']}")
         contratos[ident] = c
