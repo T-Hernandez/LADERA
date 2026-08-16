@@ -2,7 +2,7 @@
 
 Plataforma de trazabilidad ciudadana: un registro de lo que las personas observan en el territorio, al lado de la contratación pública que normalmente es difícil de recorrer.
 
-Esta versión cubre hasta la **Fase 6** (reportes ciudadanos). Los contratos del mapa siguen siendo el fixture.
+Esta versión cubre hasta la **Fase 7** (contraste reporte–contrato). Los contratos del mapa siguen siendo el fixture.
 
 ## Cómo correrlo
 
@@ -34,6 +34,7 @@ python -m pipeline.processing.resolver
 4. **Ituango**: reporte sin relación contractual conocida.
 5. **Reportar**: clic en el mapa, fecha de lo observado, foto opcional. No pide un contrato. Queda en revisión en `data/interim/reportes_locales.json`; la foto, si hay, en `data/interim/evidencias/`.
 6. **Buscar**: `Popular`, `Niquía`, `movimiento en masa`.
+7. Un reporte en Medellín sobre el muro de El Popular debe mostrar una **posible relación** con FIX-X, distinta de una **relación confirmada**. Se puede confirmar, descartar o indicar el contrato a mano.
 
 ## Datos
 
@@ -53,5 +54,6 @@ python -m pipeline.processing.resolver
 | Contratos resueltos | `data/interim/contratos_resueltos.csv` |
 | Reportes locales | `data/interim/reportes_locales.json` |
 | Fotos de evidencia | `data/interim/evidencias/` |
+| Relaciones locales | `data/interim/relaciones_locales.json` |
 
 Los contratos reales, cuando existan, salen de SECOP vía datos.gov.co (`jbjy-vk9h`). El enlace de cada hallazgo es el campo `URLProceso`, no una URL inventada.

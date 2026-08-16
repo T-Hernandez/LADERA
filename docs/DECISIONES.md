@@ -89,3 +89,13 @@
 **Impacto:** `/api/reportes` acepta multipart. `/api/territorio` resuelve el municipio del clic. El mapa, en “Reportar”, coloca y arrastra el punto en vez de abrir el municipio.
 
 **Descartado:** pedir el contrato al reportar, incrustar la imagen en el JSON, o tratar el envío como un hecho verificado.
+
+## 2026-08-15 — El motor sugiere; una persona confirma
+
+**Decisión:** `relaciones/motor.py` puntúa territorio, tiempo, categoría y un solape de palabras. Sin municipio compartido no hay sugerencia. El motor solo escribe `SUGERIDA` con método `REGLAS`. Confirmar o indicar el contrato es un acto humano (`MANUAL` o `DIRECTA`). La IA no entra.
+
+**Motivo:** la Fase 7 pide ver “posible relación” frente a “relación confirmada”. Un porcentaje no basta: cada vínculo lleva una evidencia en lenguaje concreto.
+
+**Impacto:** `/api/datos` fusiona fixture + decisiones locales + sugerencias nuevas. Las decisiones quedan en `data/interim/relaciones_locales.json`.
+
+**Descartado:** confirmar por IA, pintar una sugerencia como hecho, o exigir un contrato para crear el reporte.

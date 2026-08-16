@@ -11,6 +11,7 @@ FIXTURE_DATOS = RAIZ / "data" / "fixtures" / "datos.json"
 REPORTES_LOCALES = RAIZ / "data" / "interim" / "reportes_locales.json"
 DIR_EVIDENCIAS = RAIZ / "data" / "interim" / "evidencias"
 EVIDENCIA_MAX_BYTES = 5 * 1024 * 1024
+RELACIONES_LOCALES = RAIZ / "data" / "interim" / "relaciones_locales.json"
 DIR_RAW = RAIZ / "data" / "raw"
 DIR_METADATA = RAIZ / "data" / "metadata"
 MANIFIESTO = DIR_METADATA / "ingestion_manifest.json"

@@ -108,7 +108,7 @@ Nunca es solo `{contrato_id, reporte_id}`.
 | `creado_en`     | string          |
 | `revisado_en`   | string \| null  |
 
-`SUGERIDA` no se pinta como hecho. La IA no puede crear una `CONFIRMADA`.
+`SUGERIDA` no se pinta como hecho. La IA no puede crear una `CONFIRMADA`. El motor de la Fase 7 solo propone; confirmar o indicar el contrato es un acto humano.
 
 ## Archivo canónico
 

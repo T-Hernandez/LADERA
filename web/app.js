@@ -211,6 +211,21 @@
       </button>
     </li>`;
 
+  const etiquetaRelacion = (rel) => {
+    if (rel.estado === "CONFIRMADA") return "Relación confirmada";
+    if (rel.estado === "SUGERIDA") return "Posible relación";
+    return "Relación descartada";
+  };
+
+  const accionesRelacion = (rel) => {
+    if (rel.estado !== "SUGERIDA") return "";
+    return `
+      <p class="acciones-rel">
+        <button type="button" class="secundario" data-revisar="${escapeHtml(rel.id)}:CONFIRMADA">Confirmar relación</button>
+        <button type="button" class="secundario" data-revisar="${escapeHtml(rel.id)}:DESCARTADA">Descartar</button>
+      </p>`;
+  };
+
   const tarjetaReporte = (r) => `
     <li>
       <button type="button" class="tarjeta" data-abrir="reporte:${escapeHtml(r.id)}">
@@ -223,7 +238,7 @@
   const vistaExplorar = () => {
     const r = estado.datos.resumen;
     return `
-      <p class="kicker">Fase 6 · observaciones</p>
+      <p class="kicker">Fase 7 · contraste</p>
       <h1>Una superficie para contrastar</h1>
       <p class="muted">
         LADERA guarda lo que las personas observan y lo pone al lado de la
@@ -295,15 +310,17 @@
       ${fuente}
       ${lugares ? `<h2>Lugares con fragmento</h2><ul class="lista">${lugares}</ul>` : ""}
       <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(c.municipio_dane)}">Ver municipio ${escapeHtml(c.municipio_nombre)}</button></p>
-      <h2>Reportes relacionados</h2>
+      <h2>Reportes en contraste</h2>
       ${
-        reportes.length
+        reportes.filter(({ rel }) => rel.estado !== "DESCARTADA").length
           ? reportes
+              .filter(({ rel }) => rel.estado !== "DESCARTADA")
               .map(
                 ({ rel, rep }) => `
-            <p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(rel.estado)} · ${escapeHtml(rel.metodo)}</span></p>
+            <p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(etiquetaRelacion(rel))}</span></p>
             <p class="muted">${escapeHtml(rel.evidencia)}</p>
-            <ul class="lista">${tarjetaReporte(rep)}</ul>`
+            <ul class="lista">${tarjetaReporte(rep)}</ul>
+            ${accionesRelacion(rel)}`
               )
               .join("")
           : `<p class="muted">No hay una relación registrada con reportes.</p>`
@@ -343,19 +360,38 @@
       <p class="muted">Autor: ${escapeHtml(r.autor)}. Esto es una observación, no un hecho verificado.</p>
       ${ev || `<p class="muted">Sin evidencia fotográfica.</p>`}
       <p><button type="button" class="tarjeta" data-abrir="municipio:${escapeHtml(r.ubicacion.dane)}">Ver ubicación municipal</button></p>
-      <h2>Posibles contratos relacionados</h2>
+      <h2>Contraste con contratación</h2>
       ${
-        contratos.length
+        contratos.filter(({ rel }) => rel.estado !== "DESCARTADA").length
           ? contratos
+              .filter(({ rel }) => rel.estado !== "DESCARTADA")
               .map(
                 ({ rel, con }) => `
-            <p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(rel.estado)} · ${escapeHtml(rel.metodo)}</span></p>
+            <p><span class="estado ${rel.estado.toLowerCase()}">${escapeHtml(etiquetaRelacion(rel))}</span></p>
             <p class="muted">${escapeHtml(rel.evidencia)}</p>
-            <ul class="lista">${tarjetaContrato(con)}</ul>`
+            <ul class="lista">${tarjetaContrato(con)}</ul>
+            ${accionesRelacion(rel)}`
               )
               .join("")
           : `<p class="muted">No hay una relación contractual conocida para este reporte.</p>`
       }
+      <form class="reporte" id="form-directa">
+        <p class="paso">Si conoces el contrato</p>
+        <p class="muted">Indicar un contrato no prueba que la obra se haya ejecutado.</p>
+        <label>Contrato
+          <select name="contrato_id" required>${
+            Object.values(estado.datos.contratos)
+              .sort((a, b) => {
+                const da = a.municipio_dane === r.ubicacion.dane ? 0 : 1;
+                const db = b.municipio_dane === r.ubicacion.dane ? 0 : 1;
+                return da - db || a.id.localeCompare(b.id);
+              })
+              .map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.id)} · ${escapeHtml(c.municipio_nombre)}</option>`)
+              .join("")
+          }</select>
+        </label>
+        <button type="submit">Indicar este contrato</button>
+      </form>
     `;
   };
 
@@ -468,6 +504,29 @@
       });
     }
 
+    const directa = document.getElementById("form-directa");
+    if (directa) {
+      directa.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const fd = new FormData(directa);
+        const res = await fetch("/api/relaciones", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reporte_id: estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "",
+            contrato_id: fd.get("contrato_id"),
+          }),
+        });
+        const cuerpo = await res.json();
+        if (!res.ok) {
+          $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(cuerpo.error)}</p>`);
+          return;
+        }
+        estado.datos = await (await fetch("/api/datos")).json();
+        renderPanel();
+      });
+    }
+
     const q = document.getElementById("q");
     if (q) {
       q.focus();
@@ -507,7 +566,24 @@
     b.addEventListener("click", () => irVista(b.dataset.vista));
   });
 
-  $panel.addEventListener("click", (ev) => {
+  $panel.addEventListener("click", async (ev) => {
+    const revisar = ev.target.closest("[data-revisar]");
+    if (revisar && $panel.contains(revisar)) {
+      const [id, estadoRel] = revisar.dataset.revisar.split(":");
+      const res = await fetch(`/api/relaciones/${encodeURIComponent(id)}/revisar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: estadoRel }),
+      });
+      const cuerpo = await res.json();
+      if (!res.ok) {
+        $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(cuerpo.error)}</p>`);
+        return;
+      }
+      estado.datos = await (await fetch("/api/datos")).json();
+      renderPanel();
+      return;
+    }
     const boton = ev.target.closest("[data-abrir]");
     if (!boton || !$panel.contains(boton)) return;
     const [tipo, id] = boton.dataset.abrir.split(":");

@@ -18,9 +18,18 @@ from config import (  # noqa: E402
     HOST,
     LOOKUP_MUNICIPIOS,
     PUERTO,
+    RELACIONES_LOCALES,
     REPORTES_LOCALES,
 )
 from modelo import ModeloInvalido, reporte, validar_conjunto  # noqa: E402
+from relaciones.almacen import (  # noqa: E402
+    RelacionError,
+    fusionar_relaciones,
+    leer_relaciones,
+    registrar_directa,
+    revisar_relacion,
+)
+from relaciones.motor import sugerir_relaciones  # noqa: E402
 from reportes.almacen import (  # noqa: E402
     ReporteError,
     crear_observacion,
@@ -80,6 +89,14 @@ def ensamblar_datos() -> dict:
             municipios_validos=validos,
         )
 
+    fixture_rels = list(datos.get("relaciones") or [])
+    locales = leer_relaciones(RELACIONES_LOCALES)
+    sugeridas = sugerir_relaciones(
+        datos["reportes"],
+        datos["contratos"],
+        existentes=fixture_rels + locales,
+    )
+    datos["relaciones"] = fusionar_relaciones(fixture_rels, locales, sugeridas)
     return validar_conjunto(datos)
 
 
@@ -90,7 +107,7 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 6})
+    return jsonify({"ok": True, "fase": 7})
 
 
 @app.get("/api/datos")
@@ -138,6 +155,39 @@ def api_crear_reporte():
     except ReporteError as exc:
         return jsonify({"error": str(exc)}), 400
     return jsonify(creado), 201
+
+
+@app.post("/api/relaciones")
+def api_relacion_directa():
+    cuerpo = request.get_json(silent=True) or {}
+    try:
+        datos = ensamblar_datos()
+        creado = registrar_directa(
+            str(cuerpo.get("reporte_id") or "").strip(),
+            str(cuerpo.get("contrato_id") or "").strip(),
+            datos,
+            ruta=RELACIONES_LOCALES,
+        )
+    except (RelacionError, ModeloInvalido, FileNotFoundError) as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(creado), 201
+
+
+@app.post("/api/relaciones/<rel_id>/revisar")
+def api_revisar_relacion(rel_id: str):
+    cuerpo = request.get_json(silent=True) or {}
+    try:
+        datos = ensamblar_datos()
+        revisada = revisar_relacion(
+            rel_id,
+            str(cuerpo.get("estado") or "").strip(),
+            datos["relaciones"],
+            datos,
+            ruta=RELACIONES_LOCALES,
+        )
+    except RelacionError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(revisada)
 
 
 @app.get("/api/evidencias/<reporte_id>/<nombre>")

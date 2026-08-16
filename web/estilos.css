@@ -229,7 +229,25 @@ html, body {
 }
 
 .estado.sugerida { border-color: var(--oro); color: var(--foco); }
-.estado.confirmada { border-color: var(--contrato-suave); }
+.estado.confirmada { border-color: var(--contrato-suave); color: var(--contrato-suave); }
+
+.acciones-rel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+
+button.secundario {
+  background: transparent;
+  color: var(--papel);
+  border: 1px solid var(--linea);
+  padding: 6px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.secundario:hover { border-color: var(--oro); }
 
 .aviso {
   margin: 20px 0 0;
