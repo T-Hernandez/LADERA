@@ -177,6 +177,9 @@ class TestApi(unittest.TestCase):
         p2 = patch("web.servidor.DATOS_FINAL", self.dir / "no-existe.json")
         p2.start()
         self.addCleanup(p2.stop)
+        p3 = patch("web.servidor.MODERACION_TOKEN", "token-de-prueba")
+        p3.start()
+        self.addCleanup(p3.stop)
 
     def test_confirmar_y_etiqueta(self):
         datos = self.client.get("/api/datos").get_json()
@@ -185,6 +188,7 @@ class TestApi(unittest.TestCase):
         res = self.client.post(
             "/api/relaciones/REL-1/revisar",
             json={"estado": "CONFIRMADA"},
+            headers={"X-Moderacion-Token": "token-de-prueba"},
         )
         self.assertEqual(res.status_code, 200, res.get_data(as_text=True))
         self.assertEqual(res.get_json()["estado"], "CONFIRMADA")
@@ -192,6 +196,13 @@ class TestApi(unittest.TestCase):
         otra = self.client.get("/api/datos").get_json()
         rel2 = next(r for r in otra["relaciones"] if r["id"] == "REL-1")
         self.assertEqual(rel2["estado"], "CONFIRMADA")
+
+    def test_revisar_relacion_sin_token_rechaza(self):
+        res = self.client.post(
+            "/api/relaciones/REL-1/revisar",
+            json={"estado": "CONFIRMADA"},
+        )
+        self.assertEqual(res.status_code, 401)
 
 
 if __name__ == "__main__":

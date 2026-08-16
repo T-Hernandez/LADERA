@@ -159,3 +159,15 @@
 **Impacto:** Inicio muestra los ejes y la lectura de la puerta. El siguiente paso territorial se llama `region`; no hay capa recortada ni se carga el geojson nacional.
 
 **Descartado:** abrir el país, pintar SECOP en el mapa, cuentas de organización o periodista, o una capa nacional en el navegador.
+
+## 2026-08-16 — Candado de piloto en revisar/retirar, no autenticación real
+
+**Decisión:** `/api/reportes/<id>/revisar`, `/api/reportes/<id>/retirar` y `/api/relaciones/<id>/revisar` exigen un token compartido (`LADERA_MODERACION_TOKEN`, variable de entorno) en el header `X-Moderacion-Token`. Sin la variable configurada, el backend rechaza las tres rutas con 401, no las deja abiertas. El frontend guarda el token solo en memoria (`estado.moderacionToken`), nunca en `localStorage`, y lo pide una vez en un campo del encabezado. `/api/reportes/<id>/senalar` queda sin candado a propósito: cualquier ciudadano puede señalar contenido.
+
+**Motivo:** hoy cualquier visitante podía marcar `VERIFICADO` o retirar un reporte sin ningún control. Para el piloto no hace falta un sistema de usuarios completo, pero sí que el backend, no solo el frontend, rechace la acción.
+
+**Impacto:** correr el servidor sin `LADERA_MODERACION_TOKEN` deja la moderación completamente cerrada (nadie puede revisar/retirar/confirmar relación, ni siquiera localmente) hasta definir la variable. Cada acción sigue quedando en `data/interim/auditoria.json` exactamente igual que antes; el candado se verifica antes, no reemplaza el rastro.
+
+**Límites, para la siguiente fase:** un token compartido no identifica *quién* moderó — el campo `actor` sigue siendo texto libre, no una sesión verificada. No hay expiración, ni roles, ni revocación individual; rotar el token afecta a todo el mundo que lo tenga. Cuando exista un sistema de cuentas real, este candado se reemplaza, no se apila encima.
+
+**Descartado:** ocultar el botón en el frontend sin verificar nada en el backend; un sistema de login completo para este piloto.

@@ -182,6 +182,7 @@ class TestApi(unittest.TestCase):
             patch("web.servidor.AUDITORIA_LOCAL", self.dir / "auditoria.json"),
             patch("web.servidor.DECISIONES_REPORTES", self.dir / "decisiones.json"),
             patch("web.servidor.DATOS_FINAL", self.dir / "no-existe.json"),
+            patch("web.servidor.MODERACION_TOKEN", "token-de-prueba"),
         ]
         for item in self.patches:
             item.start()
@@ -198,6 +199,7 @@ class TestApi(unittest.TestCase):
         res = self.client.post(
             "/api/reportes/REP-2/revisar",
             json={"estado": "DESCARTADO", "motivo": "no es una observación territorial", "actor": "moderación local"},
+            headers={"X-Moderacion-Token": "token-de-prueba"},
         )
         self.assertEqual(res.status_code, 200, res.get_data(as_text=True))
         self.assertEqual(res.get_json()["estado"], "DESCARTADO")
@@ -207,6 +209,35 @@ class TestApi(unittest.TestCase):
         self.assertFalse(any(r["id"] == "REP-2" for r in busqueda["reportes"]))
         confianza = self.client.get("/api/reportes/REP-2/confianza").get_json()
         self.assertIn("no es una observación territorial", confianza["explicacion"])
+
+    def test_revisar_sin_token_rechaza(self):
+        res = self.client.post(
+            "/api/reportes/REP-2/revisar",
+            json={"estado": "DESCARTADO", "motivo": "no es una observación territorial"},
+        )
+        self.assertEqual(res.status_code, 401)
+
+    def test_revisar_token_incorrecto_rechaza(self):
+        res = self.client.post(
+            "/api/reportes/REP-2/revisar",
+            json={"estado": "DESCARTADO", "motivo": "no es una observación territorial"},
+            headers={"X-Moderacion-Token": "no-es-el-token"},
+        )
+        self.assertEqual(res.status_code, 401)
+
+    def test_retirar_sin_token_rechaza(self):
+        res = self.client.post(
+            "/api/reportes/REP-1/retirar",
+            json={"motivo": "prueba sin token"},
+        )
+        self.assertEqual(res.status_code, 401)
+
+    def test_senalar_sigue_abierto_sin_token(self):
+        res = self.client.post(
+            "/api/reportes/REP-1/senalar",
+            json={"motivo": "contenido que alguien quiere señalar"},
+        )
+        self.assertEqual(res.status_code, 200, res.get_data(as_text=True))
 
     def test_salud_fase_13(self):
         self.assertEqual(self.client.get("/api/salud").get_json()["fase"], 13)

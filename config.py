@@ -56,6 +56,10 @@ RESOLUCION_MANIFIESTO = DIR_METADATA / "resolucion_manifest.json"
 DATOS_FINAL = DIR_FINAL / "datos.json"
 CONSOLIDACION_MANIFIESTO = DIR_METADATA / "consolidacion_manifest.json"
 
+# Candado de piloto para revisar/retirar reportes y revisar relaciones.
+# "Señalar" queda abierto a cualquier ciudadano a propósito: no lleva token.
+MODERACION_TOKEN = os.environ.get("LADERA_MODERACION_TOKEN") or None
+
 # Variantes de ciudad que el lookup no trae con ese texto. No alias cortos ambiguos.
 MUNICIPIO_ALIAS = {
     "don matias": "05237",

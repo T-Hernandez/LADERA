@@ -57,6 +57,33 @@ html, body {
   gap: 24px;
   padding: 20px 28px 16px;
   border-bottom: 1px solid var(--linea);
+  flex-wrap: wrap;
+}
+
+.moderacion {
+  margin-left: auto;
+}
+
+.moderacion label {
+  display: grid;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.moderacion input {
+  background: var(--papel);
+  color: var(--tinta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-sm);
+  padding: 8px 10px;
+  font: inherit;
+  width: 180px;
+}
+
+.moderacion input:focus-visible {
+  outline: 2px solid var(--oro);
+  outline-offset: 2px;
 }
 
 .marca-nombre {

@@ -20,6 +20,7 @@ from config import (  # noqa: E402
     GEOJSON_MUNICIPIOS,
     HOST,
     LOOKUP_MUNICIPIOS,
+    MODERACION_TOKEN,
     PILOTO_EVENTOS,
     PUERTO,
     RELACIONES_LOCALES,
@@ -317,6 +318,18 @@ def _actor_pedido(cuerpo: dict) -> str:
     return str(cuerpo.get("actor") or request.remote_addr or "moderación local").strip()
 
 
+def _moderacion_autorizada() -> bool:
+    """Candado de piloto: revisar/retirar reportes y revisar relaciones lo exigen. Señalar no."""
+    if not MODERACION_TOKEN:
+        return False
+    recibido = request.headers.get("X-Moderacion-Token") or ""
+    return recibido == MODERACION_TOKEN
+
+
+def _respuesta_no_autorizada():
+    return jsonify({"error": "se requiere el token de moderación"}), 401
+
+
 @app.get("/api/reportes/<reporte_id>/confianza")
 def api_confianza(reporte_id: str):
     try:
@@ -331,6 +344,8 @@ def api_confianza(reporte_id: str):
 
 @app.post("/api/reportes/<reporte_id>/revisar")
 def api_revisar_reporte(reporte_id: str):
+    if not _moderacion_autorizada():
+        return _respuesta_no_autorizada()
     cuerpo = request.get_json(silent=True) or {}
     try:
         datos = ensamblar_datos()
@@ -370,6 +385,8 @@ def api_senalar_reporte(reporte_id: str):
 
 @app.post("/api/reportes/<reporte_id>/retirar")
 def api_retirar_reporte(reporte_id: str):
+    if not _moderacion_autorizada():
+        return _respuesta_no_autorizada()
     cuerpo = request.get_json(silent=True) or {}
     try:
         datos = ensamblar_datos()
@@ -405,6 +422,8 @@ def api_relacion_directa():
 
 @app.post("/api/relaciones/<rel_id>/revisar")
 def api_revisar_relacion(rel_id: str):
+    if not _moderacion_autorizada():
+        return _respuesta_no_autorizada()
     cuerpo = request.get_json(silent=True) or {}
     try:
         datos = ensamblar_datos()

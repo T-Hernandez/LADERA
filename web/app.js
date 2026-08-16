@@ -15,6 +15,7 @@
     zonaDane: null,
     busqueda: null,
     avisoZona: null,
+    moderacionToken: "",
     q: "",
     usarIa: false,
     hilo: null,
@@ -1049,7 +1050,7 @@
         const fd = new FormData(formRevisarRep);
         const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/revisar`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
           body: JSON.stringify({
             estado: fd.get("estado"),
             motivo: fd.get("motivo"),
@@ -1068,7 +1069,7 @@
         const fd = new FormData(formRetirar);
         const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/retirar`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
           body: JSON.stringify({ motivo: fd.get("motivo") }),
         });
         await recargarTrasConfianza(res, await res.json());
@@ -1149,6 +1150,13 @@
     b.addEventListener("click", () => irVista(b.dataset.vista));
   });
 
+  const campoToken = document.getElementById("token-moderacion");
+  if (campoToken) {
+    campoToken.addEventListener("input", () => {
+      estado.moderacionToken = campoToken.value;
+    });
+  }
+
   $panel.addEventListener("click", async (ev) => {
     const ir = ev.target.closest("[data-ir]");
     if (ir && $panel.contains(ir)) {
@@ -1184,7 +1192,7 @@
       const [id, estadoRel] = revisar.dataset.revisar.split(":");
       const res = await fetch(`/api/relaciones/${encodeURIComponent(id)}/revisar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
         body: JSON.stringify({ estado: estadoRel }),
       });
       const cuerpo = await res.json();
