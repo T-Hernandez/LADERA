@@ -149,3 +149,13 @@
 **Impacto:** Inicio muestra el recuadro del piloto. Buscar y abrir un contrato o zona dejan un evento en `piloto_eventos.json`. El mapa no cambia de fuente.
 
 **Descartado:** contar personas, abrir el país, o pintar SECOP real.
+
+## 2026-08-15 — Nombrar el siguiente paso no lo enciende
+
+**Decisión:** `/api/escala` declara los tres ejes del plan (territorio, fuentes, comunidad) y evalúa la puerta de calidad, utilidad, trazabilidad y moderación. `puede_ensanchar` y `autorizacion` quedan en falso. `POST /api/escala/activar` responde 409. El mapa activo sigue siendo `municipios_antioquia.geojson`.
+
+**Motivo:** la Fase 13 pide una infraestructura extensible, no un ensanche. La regla canónica es no escalar solo porque técnicamente es posible.
+
+**Impacto:** Inicio muestra los ejes y la lectura de la puerta. El siguiente paso territorial se llama `region`; no hay capa recortada ni se carga el geojson nacional.
+
+**Descartado:** abrir el país, pintar SECOP en el mapa, cuentas de organización o periodista, o una capa nacional en el navegador.

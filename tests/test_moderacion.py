@@ -207,8 +207,8 @@ class TestApi(unittest.TestCase):
         confianza = self.client.get("/api/reportes/REP-2/confianza").get_json()
         self.assertIn("no es una observación territorial", confianza["explicacion"])
 
-    def test_salud_fase_12(self):
-        self.assertEqual(self.client.get("/api/salud").get_json()["fase"], 12)
+    def test_salud_fase_13(self):
+        self.assertEqual(self.client.get("/api/salud").get_json()["fase"], 13)
 
 
 if __name__ == "__main__":

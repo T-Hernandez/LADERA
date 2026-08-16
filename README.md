@@ -2,7 +2,7 @@
 
 Plataforma de trazabilidad ciudadana: un registro de lo que las personas observan en el territorio, al lado de la contratación pública que normalmente es difícil de recorrer.
 
-Esta versión cubre hasta la **Fase 12** (piloto territorial en Antioquia). Los contratos del mapa siguen siendo el fixture.
+Esta versión cubre hasta la **Fase 13** (escala extensible, aún cerrada). El mapa sigue en Antioquia y los contratos del mapa siguen siendo el fixture.
 
 ## Cómo correrlo
 
@@ -39,6 +39,7 @@ python -m pipeline.processing.resolver
 9. **Confianza**: abre un reporte y lee «¿Por qué este estado?». Señala, retira o registra una decisión con motivo. Verificar no declara irregularidad. Lo descartado o retirado sale del mapa.
 10. **Un hilo**: Inicio → El Popular. Debes ver zona, periodo 2026, contrato, reporte y la posible relación en el mismo panel. Desde ahí se agrega evidencia sin perder la zona. Preguntar y observar no reinician el recorrido.
 11. **Piloto**: en Inicio, «Qué mide este piloto». Importa el contraste (reporte útil al lado de un contrato), no el número de usuarios. El alcance sigue siendo Antioquia.
+12. **Escala**: en Inicio, «Hasta dónde se puede crecer». Se nombran territorio, fuentes y comunidad. La puerta de calidad, utilidad, trazabilidad y moderación se puede leer. Eso no abre el país ni pinta SECOP.
 
 ## Datos
 

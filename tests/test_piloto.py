@@ -25,7 +25,7 @@ class TestAlcance(unittest.TestCase):
         self.assertEqual(alcance["territorio"], PILOTO_TERRITORIO)
         self.assertEqual(alcance["municipios"], PILOTO_MUNICIPIOS)
         self.assertEqual(alcance["escala"], "piloto")
-        self.assertIsNone(alcance["siguiente_escala"])
+        self.assertEqual(alcance["siguiente_escala"], "region")
         self.assertIn("Antioquia", alcance["consulta_ingesta"])
         self.assertNotIn("país", alcance["consulta_ingesta"].casefold())
 
@@ -124,8 +124,8 @@ class TestApi(unittest.TestCase):
         self.assertGreaterEqual(cuerpo["metricas"]["busquedas_realizadas"], 1)
         self.assertEqual(cuerpo["metricas"]["contratos_consultados"], 1)
 
-    def test_salud_fase_12(self):
-        self.assertEqual(self.client.get("/api/salud").get_json()["fase"], 12)
+    def test_salud_fase_13(self):
+        self.assertEqual(self.client.get("/api/salud").get_json()["fase"], 13)
 
 
 if __name__ == "__main__":

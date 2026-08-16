@@ -17,6 +17,7 @@
     usarIa: false,
     hilo: null,
     piloto: null,
+    escala: null,
     sesion: (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()),
   };
 
@@ -118,7 +119,7 @@
     return `
       <section class="piloto">
         <h2>Qué mide este piloto</h2>
-        <p class="muted">${escapeHtml(p.alcance.territorio)} · ${escapeHtml(String(p.alcance.municipios))} municipios · no se escala.</p>
+        <p class="muted">${escapeHtml(p.alcance.territorio)} · ${escapeHtml(String(p.alcance.municipios))} municipios · el siguiente paso se nombra, no se enciende.</p>
         <p>${escapeHtml(p.pregunta_central)}</p>
         <p>${escapeHtml(p.lectura)}</p>
         <div class="cifras">
@@ -132,6 +133,33 @@
           <div class="cifra"><b>${escapeHtml(tiempo)}</b> hasta encontrar</div>
         </div>
         <p class="aviso">${escapeHtml(p.nota)}</p>
+      </section>
+      ${htmlEscala()}
+    `;
+  };
+
+  const htmlEscala = () => {
+    const e = estado.escala;
+    if (!e || !e.ejes) return "";
+    const ejes = e.ejes
+      .map(
+        (eje) =>
+          `<li><strong>${escapeHtml(eje.id)}</strong> · ahora ${escapeHtml(eje.actual)} (${escapeHtml(eje.valor)}). Siguiente: ${escapeHtml(eje.siguiente)}, sin encender.</li>`
+      )
+      .join("");
+    const puerta = e.puerta || {};
+    const criterios = Object.entries(puerta.detalle || {})
+      .map(([k, v]) => `<li>${v.ok ? "sí" : "no"} · ${escapeHtml(k)}: ${escapeHtml(v.evidencia)}</li>`)
+      .join("");
+    return `
+      <section class="piloto">
+        <h2>Hasta dónde se puede crecer</h2>
+        <p class="muted">Mapa activo: ${escapeHtml(e.mapa_activo)} · ${escapeHtml(e.territorio_activo)}</p>
+        <ul class="filtros">${ejes}</ul>
+        <p>${escapeHtml(puerta.regla || "")}</p>
+        <ul class="filtros">${criterios}</ul>
+        <p>${escapeHtml(puerta.lectura || "")}</p>
+        <p class="aviso">${escapeHtml(e.nota || "")}</p>
       </section>
     `;
   };
@@ -1110,11 +1138,13 @@
     fetch("/assets/municipios_antioquia.geojson").then((r) => r.json()),
     fetch("/api/mapa").then((r) => r.json()),
     fetch("/api/piloto").then((r) => r.json()),
+    fetch("/api/escala").then((r) => r.json()),
   ])
-    .then(([datos, geojson, recorte, piloto]) => {
+    .then(([datos, geojson, recorte, piloto, escala]) => {
       estado.datos = datos;
       estado.recorte = recorte;
       estado.piloto = piloto;
+      estado.escala = escala;
       iniciarMapa(geojson);
       llenarAnios();
       pintarLeyenda();

@@ -12,11 +12,11 @@ def alcance_piloto() -> dict:
         "universo": PILOTO_UNIVERSO,
         "consulta_ingesta": SECOP_WHERE,
         "escala": "piloto",
-        "siguiente_escala": None,
+        "siguiente_escala": "region",
         "nota": (
             "El alcance sigue siendo Antioquia. "
-            "No se abre el país ni se pinta SECOP real en el mapa. "
-            "Primero hay que ver si el contraste es útil."
+            "Nombrar región o país no los enciende. "
+            "No se abre el país ni se pinta SECOP real en el mapa."
         ),
         "alias_unicos": sorted(MUNICIPIO_ALIAS),
     }

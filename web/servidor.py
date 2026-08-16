@@ -25,6 +25,7 @@ from config import (  # noqa: E402
     REPORTES_LOCALES,
 )
 from busqueda import buscar  # noqa: E402
+from escala.activar import EscalaError, estado_escala, intentar_activar  # noqa: E402
 from piloto.eventos import registrar_evento  # noqa: E402
 from piloto.metricas import resumir_piloto  # noqa: E402
 from producto.recorrido import armar_recorrido  # noqa: E402
@@ -125,7 +126,7 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 12, "territorio": "Antioquia"})
+    return jsonify({"ok": True, "fase": 13, "territorio": "Antioquia", "escala": "piloto"})
 
 
 @app.get("/api/datos")
@@ -164,6 +165,37 @@ def api_recorrido():
         )
     except (TypeError, ValueError):
         return jsonify({"error": "anio debe ser un número"}), 400
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.get("/api/escala")
+def api_escala():
+    try:
+        datos = ensamblar_datos()
+        return jsonify(
+            estado_escala(datos, ruta_eventos=PILOTO_EVENTOS, ruta_auditoria=AUDITORIA_LOCAL)
+        )
+    except ModeloInvalido as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.post("/api/escala/activar")
+def api_escala_activar():
+    cuerpo = request.get_json(silent=True) or {}
+    try:
+        datos = ensamblar_datos()
+        return jsonify(
+            intentar_activar(
+                str(cuerpo.get("eje") or ""),
+                str(cuerpo.get("destino") or ""),
+                datos,
+                ruta_eventos=PILOTO_EVENTOS,
+                ruta_auditoria=AUDITORIA_LOCAL,
+            )
+        )
+    except EscalaError as exc:
+        return jsonify({"error": str(exc), "mapa_activo": "municipios_antioquia.geojson"}), 409
     except ModeloInvalido as exc:
         return jsonify({"error": str(exc)}), 500
 
