@@ -58,6 +58,20 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;");
 
+  const ocuparBoton = (boton, texto) => {
+    if (!boton) return null;
+    const original = boton.textContent;
+    boton.disabled = true;
+    boton.textContent = texto;
+    return original;
+  };
+
+  const liberarBoton = (boton, original) => {
+    if (!boton) return;
+    boton.disabled = false;
+    if (original != null) boton.textContent = original;
+  };
+
   const plata = (n) => {
     if (n == null) return "cifra no utilizable";
     return new Intl.NumberFormat("es-CO", {
@@ -974,21 +988,27 @@
           pintarCamposPunto("Marca un punto dentro de un municipio de Antioquia.");
           return;
         }
-        const fd = new FormData(form);
-        fd.set("lat", String(estado.puntoReporte.lat));
-        fd.set("lng", String(estado.puntoReporte.lng));
-        const res = await fetch("/api/reportes", { method: "POST", body: fd });
-        const creado = await res.json();
-        if (!res.ok) {
-          $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(creado.error)}</p>`);
-          return;
+        const boton = form.querySelector('button[type="submit"]');
+        const original = ocuparBoton(boton, "Enviando…");
+        try {
+          const fd = new FormData(form);
+          fd.set("lat", String(estado.puntoReporte.lat));
+          fd.set("lng", String(estado.puntoReporte.lng));
+          const res = await fetch("/api/reportes", { method: "POST", body: fd });
+          const creado = await res.json();
+          if (!res.ok) {
+            $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(creado.error)}</p>`);
+            return;
+          }
+          quitarMarcadorBorrador();
+          vaciarBorrador();
+          estado.datos = await (await fetch("/api/datos")).json();
+          await cargarRecorte();
+          await cargarHilo();
+          abrir({ tipo: "reporte", id: creado.id });
+        } finally {
+          liberarBoton(boton, original);
         }
-        quitarMarcadorBorrador();
-        vaciarBorrador();
-        estado.datos = await (await fetch("/api/datos")).json();
-        await cargarRecorte();
-        await cargarHilo();
-        abrir({ tipo: "reporte", id: creado.id });
       });
     }
 
@@ -996,23 +1016,29 @@
     if (directa) {
       directa.addEventListener("submit", async (ev) => {
         ev.preventDefault();
-        const fd = new FormData(directa);
-        const res = await fetch("/api/relaciones", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reporte_id: estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "",
-            contrato_id: fd.get("contrato_id"),
-          }),
-        });
-        const cuerpo = await res.json();
-        if (!res.ok) {
-          $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(cuerpo.error)}</p>`);
-          return;
+        const boton = directa.querySelector('button[type="submit"]');
+        const original = ocuparBoton(boton, "Guardando…");
+        try {
+          const fd = new FormData(directa);
+          const res = await fetch("/api/relaciones", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              reporte_id: estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "",
+              contrato_id: fd.get("contrato_id"),
+            }),
+          });
+          const cuerpo = await res.json();
+          if (!res.ok) {
+            $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(cuerpo.error)}</p>`);
+            return;
+          }
+          estado.datos = await (await fetch("/api/datos")).json();
+          await cargarRecorte();
+          renderPanel();
+        } finally {
+          liberarBoton(boton, original);
         }
-        estado.datos = await (await fetch("/api/datos")).json();
-        await cargarRecorte();
-        renderPanel();
       });
     }
 
@@ -1031,14 +1057,20 @@
     if (formSenalar) {
       formSenalar.addEventListener("submit", async (ev) => {
         ev.preventDefault();
-        const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
-        const fd = new FormData(formSenalar);
-        const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/senalar`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ motivo: fd.get("motivo") }),
-        });
-        await recargarTrasConfianza(res, await res.json());
+        const boton = formSenalar.querySelector('button[type="submit"]');
+        const original = ocuparBoton(boton, "Enviando…");
+        try {
+          const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
+          const fd = new FormData(formSenalar);
+          const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/senalar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ motivo: fd.get("motivo") }),
+          });
+          await recargarTrasConfianza(res, await res.json());
+        } finally {
+          liberarBoton(boton, original);
+        }
       });
     }
 
@@ -1046,18 +1078,24 @@
     if (formRevisarRep) {
       formRevisarRep.addEventListener("submit", async (ev) => {
         ev.preventDefault();
-        const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
-        const fd = new FormData(formRevisarRep);
-        const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/revisar`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
-          body: JSON.stringify({
-            estado: fd.get("estado"),
-            motivo: fd.get("motivo"),
-            actor: fd.get("actor") || undefined,
-          }),
-        });
-        await recargarTrasConfianza(res, await res.json());
+        const boton = formRevisarRep.querySelector('button[type="submit"]');
+        const original = ocuparBoton(boton, "Guardando…");
+        try {
+          const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
+          const fd = new FormData(formRevisarRep);
+          const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/revisar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
+            body: JSON.stringify({
+              estado: fd.get("estado"),
+              motivo: fd.get("motivo"),
+              actor: fd.get("actor") || undefined,
+            }),
+          });
+          await recargarTrasConfianza(res, await res.json());
+        } finally {
+          liberarBoton(boton, original);
+        }
       });
     }
 
@@ -1065,14 +1103,20 @@
     if (formRetirar) {
       formRetirar.addEventListener("submit", async (ev) => {
         ev.preventDefault();
-        const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
-        const fd = new FormData(formRetirar);
-        const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/retirar`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
-          body: JSON.stringify({ motivo: fd.get("motivo") }),
-        });
-        await recargarTrasConfianza(res, await res.json());
+        const boton = formRetirar.querySelector('button[type="submit"]');
+        const original = ocuparBoton(boton, "Retirando…");
+        try {
+          const id = estado.seleccionado && estado.seleccionado.tipo === "reporte" ? estado.seleccionado.id : "";
+          const fd = new FormData(formRetirar);
+          const res = await fetch(`/api/reportes/${encodeURIComponent(id)}/retirar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Moderacion-Token": estado.moderacionToken || "" },
+            body: JSON.stringify({ motivo: fd.get("motivo") }),
+          });
+          await recargarTrasConfianza(res, await res.json());
+        } finally {
+          liberarBoton(boton, original);
+        }
       });
     }
 
@@ -1091,7 +1135,13 @@
         estado.usarIa = fd.get("usar_ia") === "on";
         const pregunta = (document.getElementById("q") || {}).value || "";
         if (!pregunta.trim()) return;
-        await lanzarBusqueda(pregunta.trim());
+        const boton = formBuscar.querySelector('button[type="submit"]');
+        const original = ocuparBoton(boton, "Buscando…");
+        try {
+          await lanzarBusqueda(pregunta.trim());
+        } finally {
+          liberarBoton(boton, original);
+        }
       });
     }
   };
@@ -1189,6 +1239,7 @@
     }
     const revisar = ev.target.closest("[data-revisar]");
     if (revisar && $panel.contains(revisar)) {
+      const original = ocuparBoton(revisar, "Guardando…");
       const [id, estadoRel] = revisar.dataset.revisar.split(":");
       const res = await fetch(`/api/relaciones/${encodeURIComponent(id)}/revisar`, {
         method: "POST",
@@ -1197,6 +1248,7 @@
       });
       const cuerpo = await res.json();
       if (!res.ok) {
+        liberarBoton(revisar, original);
         $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(cuerpo.error)}</p>`);
         return;
       }
