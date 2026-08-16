@@ -90,6 +90,20 @@ class TestEntidades(unittest.TestCase):
                 ]
             )
 
+    def test_lat_sin_lng_se_rechaza(self):
+        with self.assertRaises(ModeloInvalido):
+            _base_reporte(ubicacion={
+                "dane": "05001",
+                "nombre": "MEDELLÍN",
+                "detalle": None,
+                "lat": 6.3,
+                "lng": None,
+            })
+
+    def test_fecha_observacion_mal_formada_se_rechaza(self):
+        with self.assertRaises(ModeloInvalido):
+            _base_reporte(fecha_observacion="15/06/2026")
+
     def test_fragmento_literal_se_acepta(self):
         c = _base_contrato(
             ubicaciones=[

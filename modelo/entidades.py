@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from modelo.constantes import (
     CATEGORIAS_REPORTE,
     ESTADOS_CONTRATO,
@@ -29,6 +31,25 @@ def _opcional(valor):
     if isinstance(valor, str) and not valor.strip():
         return None
     return valor
+
+
+def _fecha_dia(valor, campo: str) -> str:
+    texto = _texto(valor, campo)
+    try:
+        date.fromisoformat(texto)
+    except ValueError as exc:
+        raise ModeloInvalido(f"{campo} debe ser YYYY-MM-DD") from exc
+    return texto
+
+
+def _coord(valor, campo: str):
+    if valor is None or valor == "":
+        return None
+    try:
+        numero = float(valor)
+    except (TypeError, ValueError) as exc:
+        raise ModeloInvalido(f"{campo} no es numérico") from exc
+    return numero
 
 
 def municipio_vacio(nombre: str, dane: str) -> dict:
@@ -174,10 +195,18 @@ def reporte(
         )
         for e in (evidencias or [])
     ]
+    lat = _coord(ubicacion.get("lat"), "ubicacion.lat")
+    lng = _coord(ubicacion.get("lng"), "ubicacion.lng")
+    if (lat is None) != (lng is None):
+        raise ModeloInvalido("lat y lng van juntos")
+    if lat is not None and not (-90 <= lat <= 90):
+        raise ModeloInvalido("lat fuera de rango")
+    if lng is not None and not (-180 <= lng <= 180):
+        raise ModeloInvalido("lng fuera de rango")
     return {
         "id": _texto(id, "id"),
         "fecha_creacion": _texto(fecha_creacion, "fecha_creacion"),
-        "fecha_observacion": _texto(fecha_observacion, "fecha_observacion"),
+        "fecha_observacion": _fecha_dia(fecha_observacion, "fecha_observacion"),
         "descripcion": _texto(descripcion, "descripcion"),
         "categoria": categoria,
         "estado": estado,
@@ -186,8 +215,8 @@ def reporte(
             "dane": dane,
             "nombre": _texto(ubicacion.get("nombre"), "ubicacion.nombre"),
             "detalle": _opcional(ubicacion.get("detalle")),
-            "lat": ubicacion.get("lat"),
-            "lng": ubicacion.get("lng"),
+            "lat": lat,
+            "lng": lng,
         },
         "evidencias": evs,
     }

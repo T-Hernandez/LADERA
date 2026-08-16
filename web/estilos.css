@@ -264,6 +264,22 @@ form.reporte textarea {
 
 form.reporte textarea { min-height: 110px; resize: vertical; }
 
+form.reporte .paso {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--oro);
+}
+
+.punto-estado {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--oro);
+  color: var(--papel);
+  font-size: 0.9rem;
+}
+
 form.reporte button,
 .enlace {
   justify-self: start;

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import json
 import sys
-import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
@@ -14,6 +12,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
 from config import (  # noqa: E402
+    DIR_EVIDENCIAS,
     FIXTURE_DATOS,
     GEOJSON_MUNICIPIOS,
     HOST,
@@ -22,10 +21,20 @@ from config import (  # noqa: E402
     REPORTES_LOCALES,
 )
 from modelo import ModeloInvalido, reporte, validar_conjunto  # noqa: E402
+from reportes.almacen import (  # noqa: E402
+    ReporteError,
+    crear_observacion,
+    leer_reportes,
+    ruta_evidencia,
+)
+from reportes.territorio import municipio_en_punto  # noqa: E402
 
 WEB = Path(__file__).resolve().parent
 
 app = Flask(__name__, static_folder=str(WEB), static_url_path="")
+
+_geojson = None
+_lookup = None
 
 
 def _leer_json(ruta: Path, vacio):
@@ -34,11 +43,18 @@ def _leer_json(ruta: Path, vacio):
     return json.loads(ruta.read_text(encoding="utf-8"))
 
 
-def _reportes_locales() -> list[dict]:
-    crudo = _leer_json(REPORTES_LOCALES, [])
-    if isinstance(crudo, list):
-        return crudo
-    return []
+def _lookup_municipios() -> dict:
+    global _lookup
+    if _lookup is None:
+        _lookup = _leer_json(LOOKUP_MUNICIPIOS, {})
+    return _lookup
+
+
+def _geojson_municipios() -> dict:
+    global _geojson
+    if _geojson is None:
+        _geojson = json.loads(GEOJSON_MUNICIPIOS.read_text(encoding="utf-8"))
+    return _geojson
 
 
 def ensamblar_datos() -> dict:
@@ -46,11 +62,11 @@ def ensamblar_datos() -> dict:
     if datos is None:
         raise FileNotFoundError(f"Falta el fixture: {FIXTURE_DATOS}")
 
-    lookup = _leer_json(LOOKUP_MUNICIPIOS, {})
+    lookup = _lookup_municipios()
     por_dane = {item["dane"]: item for item in lookup.values()}
     validos = set(por_dane)
 
-    for crudo in _reportes_locales():
+    for crudo in leer_reportes(REPORTES_LOCALES):
         datos["reportes"][crudo["id"]] = reporte(
             id=crudo["id"],
             fecha_creacion=crudo["fecha_creacion"],
@@ -74,7 +90,7 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 2})
+    return jsonify({"ok": True, "fase": 6})
 
 
 @app.get("/api/datos")
@@ -85,42 +101,54 @@ def api_datos():
         return jsonify({"error": str(exc)}), 500
 
 
+@app.get("/api/territorio")
+def api_territorio():
+    try:
+        lat = float(request.args.get("lat"))
+        lng = float(request.args.get("lng"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "lat y lng tienen que ser números"}), 400
+    prefer = str(request.args.get("dane") or "").strip() or None
+    hallado = municipio_en_punto(lat, lng, _geojson_municipios(), prefer_dane=prefer)
+    if hallado is None:
+        return jsonify({"error": "el punto no está en un municipio de Antioquia"}), 404
+    lookup = _lookup_municipios()
+    por_dane = {item["dane"]: item for item in lookup.values()}
+    nombre = por_dane.get(hallado["dane"], {}).get("nombre") or hallado["nombre"]
+    return jsonify({"dane": hallado["dane"], "nombre": nombre})
+
+
 @app.post("/api/reportes")
 def api_crear_reporte():
-    cuerpo = request.get_json(silent=True) or {}
-    lookup = _leer_json(LOOKUP_MUNICIPIOS, {})
-    por_dane = {item["dane"]: item for item in lookup.values()}
-    dane = str(cuerpo.get("dane") or "").strip()
+    if request.files or (request.content_type or "").startswith("multipart/"):
+        cuerpo = request.form.to_dict()
+        archivo = request.files.get("foto")
+    else:
+        cuerpo = request.get_json(silent=True) or {}
+        archivo = None
     try:
-        creado = reporte(
-            id=f"REP-L-{uuid.uuid4().hex[:8]}",
-            fecha_creacion=datetime.now(timezone.utc).isoformat(),
-            fecha_observacion=str(cuerpo.get("fecha_observacion") or "").strip(),
-            descripcion=str(cuerpo.get("descripcion") or "").strip(),
-            categoria=str(cuerpo.get("categoria") or "").strip(),
-            estado="PUBLICADO",
-            autor=str(cuerpo.get("autor") or "ciudadano (local)").strip() or "ciudadano (local)",
-            ubicacion={
-                "dane": dane,
-                "nombre": por_dane.get(dane, {}).get("nombre") or dane,
-                "detalle": str(cuerpo.get("detalle") or "").strip() or None,
-                "lat": None,
-                "lng": None,
-            },
-            evidencias=[],
-            municipios_validos=set(por_dane),
+        creado = crear_observacion(
+            cuerpo,
+            archivo,
+            lookup=_lookup_municipios(),
+            geojson=_geojson_municipios(),
+            ruta_reportes=REPORTES_LOCALES,
+            dir_evidencias=DIR_EVIDENCIAS,
         )
-    except ModeloInvalido as exc:
+    except ReporteError as exc:
         return jsonify({"error": str(exc)}), 400
-
-    REPORTES_LOCALES.parent.mkdir(parents=True, exist_ok=True)
-    actuales = _reportes_locales()
-    actuales.append(creado)
-    REPORTES_LOCALES.write_text(
-        json.dumps(actuales, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
     return jsonify(creado), 201
+
+
+@app.get("/api/evidencias/<reporte_id>/<nombre>")
+def api_evidencia(reporte_id: str, nombre: str):
+    try:
+        ruta = ruta_evidencia(reporte_id, nombre, DIR_EVIDENCIAS)
+    except ReporteError:
+        return jsonify({"error": "evidencia no encontrada"}), 404
+    if not ruta.exists():
+        return jsonify({"error": "evidencia no encontrada"}), 404
+    return send_from_directory(ruta.parent, ruta.name)
 
 
 @app.get("/assets/municipios_antioquia.geojson")

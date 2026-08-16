@@ -89,6 +89,8 @@ Un reporte es una observación, no un hecho verificado.
 | `fecha`    | string |
 | `metadata` | object |
 
+La foto de un reporte ciudadano se guarda en `data/interim/evidencias/`. El JSON solo lleva la URL. No se incrusta la imagen en la descripción.
+
 ## Relación
 
 Nunca es solo `{contrato_id, reporte_id}`.

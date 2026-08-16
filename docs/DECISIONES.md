@@ -79,3 +79,13 @@
 **Impacto:** el frontend no cambia. La salida es `data/interim/contratos_resueltos.csv`.
 
 **Descartado:** alias cortos como “San Pedro” o “El Carmen”. Dos municipios los comparten.
+
+## 2026-08-15 — Un reporte no necesita contrato
+
+**Decisión:** `reportes/almacen.py` crea una observación con descripción, categoría, punto, municipio automático (polígono DANE), fecha de lo observado y, si viene, una foto en disco. El alta queda `EN_REVISION`. La fecha de creación la pone el servidor. Un `contrato_id` en el formulario se ignora.
+
+**Motivo:** la Fase 6 pide un reporte completo sin conocer contratación. La foto no viaja dentro del texto. Vincular reporte y contrato es la Fase 7.
+
+**Impacto:** `/api/reportes` acepta multipart. `/api/territorio` resuelve el municipio del clic. El mapa, en “Reportar”, coloca y arrastra el punto en vez de abrir el municipio.
+
+**Descartado:** pedir el contrato al reportar, incrustar la imagen en el JSON, o tratar el envío como un hecho verificado.

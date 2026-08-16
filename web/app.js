@@ -6,6 +6,8 @@
     mapa: null,
     capa: null,
     marcas: [],
+    puntoReporte: null,
+    marcadorBorrador: null,
   };
 
   const $panel = document.getElementById("panel-contenido");
@@ -23,6 +25,13 @@
     PROXIMO_A_VENCER: "Próximo a vencer",
     SIN_FECHA_SUFICIENTE: "Sin fecha suficiente",
     DESCONOCIDO: "Desconocido",
+  };
+  const estadosReporte = {
+    PUBLICADO: "Publicado",
+    EN_REVISION: "En revisión",
+    RELACIONADO: "Relacionado",
+    VERIFICADO: "Verificado",
+    DESCARTADO: "Descartado",
   };
 
   const escapeHtml = (valor) =>
@@ -131,7 +140,59 @@
     renderPanel();
   };
 
+  const quitarMarcadorBorrador = () => {
+    if (estado.marcadorBorrador) {
+      estado.marcadorBorrador.remove();
+      estado.marcadorBorrador = null;
+    }
+    estado.puntoReporte = null;
+  };
+
+  const textoPunto = (punto, error) => {
+    if (error) return error;
+    if (!punto || !punto.dane) return "Haz clic en el mapa y arrastra el marcador para ajustar.";
+    return `Municipio: ${punto.nombre}. Puedes arrastrar el punto.`;
+  };
+
+  const pintarCamposPunto = (error) => {
+    const estadoPunto = document.getElementById("punto-estado");
+    const lat = document.getElementById("campo-lat");
+    const lng = document.getElementById("campo-lng");
+    if (lat) lat.value = estado.puntoReporte ? estado.puntoReporte.lat : "";
+    if (lng) lng.value = estado.puntoReporte ? estado.puntoReporte.lng : "";
+    if (estadoPunto) estadoPunto.textContent = textoPunto(estado.puntoReporte, error);
+  };
+
+  const ponerPuntoReporte = async (latlng, danePreferido) => {
+    if (!estado.mapa) return;
+    if (estado.marcadorBorrador) {
+      estado.marcadorBorrador.setLatLng(latlng);
+    } else {
+      estado.marcadorBorrador = L.marker(latlng, { draggable: true, autoPan: true }).addTo(estado.mapa);
+      estado.marcadorBorrador.on("dragend", (ev) => ponerPuntoReporte(ev.target.getLatLng()));
+    }
+    estado.puntoReporte = { lat: latlng.lat, lng: latlng.lng, dane: "", nombre: "" };
+    pintarCamposPunto(null);
+    try {
+      const params = new URLSearchParams({ lat: String(latlng.lat), lng: String(latlng.lng) });
+      if (danePreferido) params.set("dane", danePreferido);
+      const res = await fetch(`/api/territorio?${params.toString()}`);
+      const data = await res.json();
+      if (!res.ok) {
+        estado.puntoReporte.dane = "";
+        pintarCamposPunto(data.error || "El punto no está en Antioquia.");
+        return;
+      }
+      estado.puntoReporte.dane = data.dane;
+      estado.puntoReporte.nombre = data.nombre;
+      pintarCamposPunto(null);
+    } catch (err) {
+      pintarCamposPunto(err.message);
+    }
+  };
+
   const irVista = (vista) => {
+    if (estado.vista === "reportar" && vista !== "reportar") quitarMarcadorBorrador();
     estado.vista = vista;
     if (vista !== "mapa") estado.seleccionado = null;
     pintarCapa();
@@ -162,7 +223,7 @@
   const vistaExplorar = () => {
     const r = estado.datos.resumen;
     return `
-      <p class="kicker">Fase 1 · fixture</p>
+      <p class="kicker">Fase 6 · observaciones</p>
       <h1>Una superficie para contrastar</h1>
       <p class="muted">
         LADERA guarda lo que las personas observan y lo pone al lado de la
@@ -270,11 +331,12 @@
       )
       .join("");
     return `
-      <p class="kicker">Reporte · ${escapeHtml(r.estado)}</p>
+      <p class="kicker">Reporte · ${escapeHtml(estadosReporte[r.estado] || r.estado)}</p>
       <h1>${escapeHtml(categorias[r.categoria] || r.categoria)}</h1>
       <p>${escapeHtml(r.descripcion)}</p>
       <p class="muted">
         Observado el ${escapeHtml(r.fecha_observacion)} ·
+        registrado el ${escapeHtml((r.fecha_creacion || "").slice(0, 10))} ·
         ${escapeHtml(r.ubicacion.nombre)}
         ${r.ubicacion.detalle ? " · " + escapeHtml(r.ubicacion.detalle) : ""}
       </p>
@@ -298,39 +360,44 @@
   };
 
   const vistaReportar = () => {
-    const opciones = Object.values(estado.datos.municipios)
-      .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
-      .map((m) => `<option value="${escapeHtml(m.dane)}">${escapeHtml(m.nombre)}</option>`)
-      .join("");
     const cats = Object.entries(categorias)
       .map(([k, v]) => `<option value="${k}">${escapeHtml(v)}</option>`)
       .join("");
+    const punto = estado.puntoReporte || {};
     return `
       <p class="kicker">Nueva observación</p>
       <h1>Reportar</h1>
-      <p class="muted">No necesitas conocer un contrato. Describe lo que observaste.</p>
+      <p class="muted">No necesitas conocer un contrato. Describe lo que observaste, márcalo en el mapa y, si puedes, adjunta una foto.</p>
       <form class="reporte" id="form-reporte">
-        <label>Municipio
-          <select name="dane" required>${opciones}</select>
-        </label>
-        <label>Lugar más específico (opcional)
-          <input name="detalle" maxlength="160" placeholder="barrio, vereda, vía">
-        </label>
-        <label>Fecha en que lo observaste
-          <input name="fecha_observacion" type="date" required>
+        <p class="paso">1. Qué observaste</p>
+        <label>Descripción
+          <textarea name="descripcion" required maxlength="1200" placeholder="¿Qué viste en el territorio?"></textarea>
         </label>
         <label>Categoría
           <select name="categoria" required>${cats}</select>
         </label>
-        <label>Qué observaste
-          <textarea name="descripcion" required maxlength="1200"></textarea>
+        <p class="paso">2. Dónde</p>
+        <p class="punto-estado" id="punto-estado">${escapeHtml(textoPunto(estado.puntoReporte))}</p>
+        <input type="hidden" name="lat" id="campo-lat" value="${punto.lat != null ? escapeHtml(punto.lat) : ""}">
+        <input type="hidden" name="lng" id="campo-lng" value="${punto.lng != null ? escapeHtml(punto.lng) : ""}">
+        <label>Lugar más específico (opcional)
+          <input name="detalle" maxlength="160" placeholder="barrio, vereda, vía">
+        </label>
+        <p class="paso">3. Cuándo lo observaste</p>
+        <label>Fecha de la observación
+          <input name="fecha_observacion" type="date" required>
+        </label>
+        <p class="muted">La fecha en que envías el reporte la registra el sistema.</p>
+        <p class="paso">4. Evidencia</p>
+        <label>Fotografía (opcional)
+          <input name="foto" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
         </label>
         <label>Tu nombre o seudónimo (opcional)
           <input name="autor" maxlength="80">
         </label>
-        <button type="submit">Publicar reporte</button>
+        <button type="submit">Enviar observación</button>
       </form>
-      <p class="aviso">En esta fase el reporte queda en este equipo, no en un servidor público.</p>
+      <p class="aviso">Queda en revisión en este equipo. No es un hecho verificado y no se vincula solo a un contrato.</p>
     `;
   };
 
@@ -380,18 +447,20 @@
     if (form) {
       form.addEventListener("submit", async (ev) => {
         ev.preventDefault();
+        if (!estado.puntoReporte || !estado.puntoReporte.dane) {
+          pintarCamposPunto("Marca un punto dentro de un municipio de Antioquia.");
+          return;
+        }
         const fd = new FormData(form);
-        const cuerpo = Object.fromEntries(fd.entries());
-        const res = await fetch("/api/reportes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(cuerpo),
-        });
+        fd.set("lat", String(estado.puntoReporte.lat));
+        fd.set("lng", String(estado.puntoReporte.lng));
+        const res = await fetch("/api/reportes", { method: "POST", body: fd });
         const creado = await res.json();
         if (!res.ok) {
           $panel.insertAdjacentHTML("beforeend", `<p class="aviso">${escapeHtml(creado.error)}</p>`);
           return;
         }
+        quitarMarcadorBorrador();
         estado.datos = await (await fetch("/api/datos")).json();
         marcarPuntos();
         pintarCapa();
@@ -420,7 +489,14 @@
       onEachFeature: (feature, layer) => {
         const mun = municipio(daneDe(feature));
         layer.bindTooltip(mun ? mun.nombre : feature.properties.MPIO_CNMBR);
-        layer.on("click", () => abrir({ tipo: "municipio", id: daneDe(feature) }));
+        layer.on("click", (ev) => {
+          if (estado.vista === "reportar") {
+            L.DomEvent.stopPropagation(ev);
+            ponerPuntoReporte(ev.latlng, daneDe(feature));
+            return;
+          }
+          abrir({ tipo: "municipio", id: daneDe(feature) });
+        });
       },
     }).addTo(estado.mapa);
     estado.mapa.fitBounds(estado.capa.getBounds(), { padding: [16, 16] });
