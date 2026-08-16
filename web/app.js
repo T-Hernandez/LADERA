@@ -490,7 +490,12 @@
     }
     pintarCapa();
     marcarNav();
-    cargarHilo().then(renderPanel);
+    await cargarHilo();
+    renderPanel();
+    if (vista === "buscar") {
+      const q = document.getElementById("q");
+      if (q) q.focus();
+    }
   };
 
   const tarjetaContrato = (c) => `
@@ -1165,7 +1170,6 @@
     if (formBuscar) {
       const q = document.getElementById("q");
       if (q) {
-        q.focus();
         q.addEventListener("input", () => {
           estado.q = q.value;
         });
