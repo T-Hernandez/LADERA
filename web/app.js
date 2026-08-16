@@ -18,7 +18,6 @@
     moderacionToken: "",
     modoModerador: false,
     q: "",
-    hilo: null,
     piloto: null,
     escala: null,
     sesion: (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()),
@@ -149,6 +148,55 @@
       $dialogoMotivo.showModal();
     });
 
+  const INTRO_PESTANA = {
+    explorar: {
+      titulo: "Inicio",
+      texto: "Un resumen general: cuántos municipios, contratos y reportes hay en el conjunto analizado. Desde acá entras a Zona, Buscar o Reportar.",
+    },
+    mapa: {
+      titulo: "Zona",
+      texto: "Explora un municipio: sus contratos, los reportes ciudadanos asociados y las posibles conexiones entre ambos.",
+    },
+    buscar: {
+      titulo: "Buscar",
+      texto: "Pregunta en lenguaje natural, por ejemplo qué contratos tienen reportes de obras inconclusas en un municipio y año.",
+    },
+    reportar: {
+      titulo: "Reportar",
+      texto: "Registra una observación ciudadana sobre una obra o contrato: qué pasa, dónde y cuándo lo viste.",
+    },
+  };
+
+  // TEMPORAL, solo para pruebas: fuerza a que el popup de cada pestaña se
+  // muestre en cada recarga en vez de solo la primera vez. Volver a false
+  // para restaurar el comportamiento normal (una vez por navegador).
+  const FORZAR_INTRO_SIEMPRE = true;
+
+  const $introPestana = document.getElementById("intro-pestana");
+  const mostrarIntroSiPrimeraVez = (vista) => {
+    const info = INTRO_PESTANA[vista];
+    if (!info || !$introPestana) return;
+    const clave = `ladera_intro_${vista}`;
+    if (!FORZAR_INTRO_SIEMPRE) {
+      try {
+        if (localStorage.getItem(clave)) return;
+        localStorage.setItem(clave, "1");
+      } catch (_err) {
+        // almacenamiento no disponible (ej. navegación privada): se muestra igual, sin recordar
+      }
+    }
+    document.getElementById("intro-titulo").textContent = info.titulo;
+    document.getElementById("intro-texto").textContent = info.texto;
+    $introPestana.hidden = false;
+  };
+
+  const $introCerrar = document.getElementById("intro-cerrar");
+  if ($introCerrar) {
+    $introCerrar.addEventListener("click", () => {
+      $introPestana.hidden = true;
+    });
+  }
+
   const plata = (n) => {
     if (n == null) return "cifra no utilizable";
     return new Intl.NumberFormat("es-CO", {
@@ -189,12 +237,6 @@
 
   const snapDe = (dane) => (estado.recorte && estado.recorte.municipios[dane]) || null;
 
-  const numeroPaso = (clave, alt) => {
-    const pasos = (estado.hilo && estado.hilo.pasos) || [];
-    const p = pasos.find((x) => x.clave === clave);
-    return p ? p.id : alt;
-  };
-
   const hayBorradorConContenido = () => {
     const texto = (estado.borrador.descripcion || "").trim();
     return !!(texto || estado.puntoReporte);
@@ -202,13 +244,6 @@
 
   const vaciarBorrador = () => {
     estado.borrador = { descripcion: "", categoria: "", detalle: "", fecha_observacion: "", autor: "" };
-  };
-
-  const TITULOS_SIGUIENTE = {
-    zona: "Elige o pregunta por una zona",
-    evidencia: "Agrega una observación en esta zona",
-    relaciones: "Contrasta con un contrato o espera una sugerencia",
-    continuar: "Otra persona puede seguir contrastando aquí",
   };
 
   const registrarEvento = (accion, objeto, resultado) => {
@@ -292,16 +327,6 @@
       <p><button type="button" class="tarjeta" data-ir="explorar">Volver a Inicio</button></p>
     `;
 
-  const cargarHilo = async () => {
-    const q = new URLSearchParams();
-    if (estado.zonaDane) q.set("dane", estado.zonaDane);
-    if (estado.filtro.anio) q.set("anio", estado.filtro.anio);
-    if (estado.filtro.estado) q.set("estado", estado.filtro.estado);
-    if (estado.q) q.set("pregunta", estado.q);
-    const res = await fetch(`/api/recorrido?${q.toString()}`);
-    estado.hilo = await res.json();
-  };
-
   const centrarZona = (dane) => {
     if (!estado.mapa || !estado.capa || !dane) return;
     estado.capa.eachLayer((layer) => {
@@ -309,27 +334,6 @@
         estado.mapa.fitBounds(layer.getBounds(), { padding: [28, 28], maxZoom: 10 });
       }
     });
-  };
-
-  const htmlHilo = () => {
-    const h = estado.hilo;
-    if (!h) return "";
-    const zona = h.zona && h.zona.nombre ? h.zona.nombre : "sin zona";
-    const periodo = h.filtro && h.filtro.anio ? h.filtro.anio : "todos los años";
-    const pregunta = h.pregunta ? ` · «${h.pregunta}»` : "";
-    const pasos = (h.pasos || [])
-      .map(
-        (p) =>
-          `<li class="${p.listo ? "listo" : ""} ${p.clave === h.siguiente ? "aqui" : ""}">${escapeHtml(p.id)}. ${escapeHtml(p.titulo)}</li>`
-      )
-      .join("");
-    return `
-      <nav class="hilo" aria-label="Recorrido de contraste">
-        <p class="hilo-zona">${escapeHtml(zona)} · ${escapeHtml(String(periodo))}${escapeHtml(pregunta)}</p>
-        <ol>${pasos}</ol>
-        <p class="muted">${escapeHtml(TITULOS_SIGUIENTE[h.siguiente] || "")}</p>
-      </nav>
-    `;
   };
 
   const colorDinero = (plata, max) => {
@@ -484,7 +488,8 @@
     }
     pintarCapa();
     marcarNav();
-    cargarHilo().then(renderPanel);
+    renderPanel();
+    if (sel) mostrarIntroSiPrimeraVez(estado.vista);
   };
 
   const quitarMarcadorBorrador = () => {
@@ -559,8 +564,8 @@
     }
     pintarCapa();
     marcarNav();
-    await cargarHilo();
     renderPanel();
+    mostrarIntroSiPrimeraVez(vista);
     if (vista === "buscar") {
       const q = document.getElementById("q");
       if (q) q.focus();
@@ -629,7 +634,6 @@
     const esFixture = r.fuente === "fixture";
     const excluidos = r.contratos_fuera_del_mapa;
     return `
-      ${htmlHilo()}
       <p class="kicker">Un solo recorrido</p>
       <h1>De lo observado a la evidencia pública</h1>
       <p class="muted">
@@ -697,7 +701,6 @@
       );
     });
     return `
-      ${htmlHilo()}
       <p class="kicker">Zona · ${escapeHtml(mun.dane)}${periodo}</p>
       <h1>${escapeHtml(mun.nombre)}</h1>
       <div class="cifras">
@@ -712,12 +715,12 @@
       </div>
       ${(snap.sin_cifra || 0) > 0 ? `<p class="muted">Algunos valores no pudieron utilizarse para el cálculo.</p>` : ""}
       <p class="aviso">${escapeHtml((estado.recorte && estado.recorte.nota) || "Cero contratos identificados no significa cero inversión.")}</p>
-      <h2>${numeroPaso("contratos", 3)}. Contratos en esta zona</h2>
+      <h2>Contratos en esta zona</h2>
       ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">Sin contratación identificada en el conjunto analizado. Eso no significa cero inversión.</p>`}
-      <h2>${numeroPaso("reportes", 5)}. Reportes existentes</h2>
+      <h2>Reportes existentes</h2>
       ${reportes.length ? `<ul class="lista">${reportes.map(tarjetaReporte).join("")}</ul>` : `<p class="muted">Nadie ha publicado un reporte en este municipio todavía.</p>`}
-      <p><button type="button" class="tarjeta" data-ir="reportar">${numeroPaso("evidencia", 6)}. Agregar una observación en ${escapeHtml(mun.nombre)}</button></p>
-      <h2>${numeroPaso("relaciones", 7)}. Posibles conexiones</h2>
+      <p><button type="button" class="tarjeta" data-ir="reportar">Agregar una observación en ${escapeHtml(mun.nombre)}</button></p>
+      <h2>Posibles conexiones</h2>
       ${
         relsZona.length
           ? relsZona
@@ -732,7 +735,7 @@
               .join("")
           : `<p class="muted">Aún no hay una posible conexión registrada. Al agregar evidencia, la plataforma puede sugerir una. Eso no confirma el reporte.</p>`
       }
-      <p class="aviso">${numeroPaso("continuar", 8)}. Otra persona puede preguntar de nuevo, señalar un reporte o confirmar una posible conexión desde esta misma zona.</p>
+      <p class="aviso">Otra persona puede preguntar de nuevo, señalar un reporte o confirmar una posible conexión desde esta misma zona.</p>
     `;
   };
 
@@ -754,7 +757,6 @@
       .map((u) => `<li><strong>${escapeHtml(u.nombre)}</strong><small>Fragmento: “${escapeHtml(u.fragmento)}”</small></li>`)
       .join("");
     return `
-      ${htmlHilo()}
       <p class="kicker">Contrato · ${escapeHtml(c.fuente)}</p>
       <h1>${escapeHtml(c.id)}</h1>
       <p><span class="estado">${escapeHtml(estadosContrato[c.estado] || c.estado)}</span></p>
@@ -804,7 +806,6 @@
       )
       .join("");
     return `
-      ${htmlHilo()}
       <p class="kicker">Reporte · ${escapeHtml(estadosReporte[r.estado] || r.estado)}</p>
       <h1>${escapeHtml(categorias[r.categoria] || r.categoria)}</h1>
       <p>${escapeHtml(r.descripcion)}</p>
@@ -949,8 +950,7 @@
     const punto = estado.puntoReporte || {};
     const zona = estado.zonaDane ? municipio(estado.zonaDane) : null;
     return `
-      ${htmlHilo()}
-      <p class="kicker">${numeroPaso("evidencia", 6)}. Agregar evidencia</p>
+      <p class="kicker">Agregar evidencia</p>
       <h1>${zona ? `Observar en ${escapeHtml(zona.nombre)}` : "Nueva observación"}</h1>
       <p class="muted">${zona ? `Sigues en ${escapeHtml(zona.nombre)}. ` : ""}No necesitas conocer un contrato. Describe lo que observaste, márcalo en el mapa y, si puedes, adjunta una foto.</p>
       <div class="zona-elegir">
@@ -1073,7 +1073,6 @@
   };
 
   const vistaBuscar = () => `
-      ${htmlHilo()}
       <p class="kicker">Buscar con lenguaje natural</p>
       <h1>Escribe lo que quieres saber, con tus propias palabras</h1>
       <p class="muted">Por ejemplo: «contratos activos de vías en Medellín que tengan reportes ciudadanos». No hace falta conocer los nombres técnicos de SECOP — LADERA lo convierte en filtros y te muestra exactamente qué entendió antes de buscar.</p>
@@ -1115,7 +1114,6 @@
       recortar = true;
     }
     if (recortar) await cargarRecorte();
-    await cargarHilo();
   };
 
   const lanzarBusqueda = async (pregunta) => {
@@ -1151,7 +1149,7 @@
     else if (estado.seleccionado?.tipo === "contrato") $panel.innerHTML = vistaContrato(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "reporte") $panel.innerHTML = vistaReporte(estado.seleccionado.id);
     else
-      $panel.innerHTML = `${htmlHilo()}<p class="kicker">El mismo territorio</p><h1>Elige una zona</h1><p class="muted">El periodo y las capas recortan este mapa. Ver contratación y reportes en el mismo año no demuestra causa. Al elegir una zona sigues el hilo: contratos, valores, observaciones y relaciones.</p>
+      $panel.innerHTML = `<p class="kicker">El mismo territorio</p><h1>Elige una zona</h1><p class="muted">El periodo y las capas recortan este mapa. Ver contratación y reportes en el mismo año no demuestra causa. Al elegir una zona verás sus contratos, valores, observaciones y posibles conexiones.</p>
       <div class="zona-elegir">
         <label>Municipio (alternativa al mapa)
           <select id="select-municipio-zona" class="selector-municipio">${opcionesMunicipios("")}</select>
@@ -1206,7 +1204,6 @@
           vaciarBorrador();
           estado.datos = await (await fetch("/api/datos")).json();
           await cargarRecorte();
-          await cargarHilo();
           abrir({ tipo: "reporte", id: creado.id });
         } finally {
           liberarBoton(boton, original);
@@ -1370,7 +1367,6 @@
     const res = await fetch(`/api/mapa?${q.toString()}`);
     estado.recorte = await res.json();
     llenarAnios();
-    await cargarHilo();
     pintarCapa();
     marcarPuntos();
     if (estado.vista === "mapa" || (estado.seleccionado && estado.seleccionado.tipo === "municipio")) {
@@ -1490,7 +1486,6 @@
       }
       estado.datos = await (await fetch("/api/datos")).json();
       await cargarRecorte();
-      await cargarHilo();
       renderPanel();
       return;
     }
@@ -1535,6 +1530,7 @@
       pintarLeyenda();
       pintarPieFuente();
       renderPanel();
+      mostrarIntroSiPrimeraVez(estado.vista);
     })
     .catch((err) => {
       $panel.innerHTML = `<p>No se pudo cargar LADERA. ${escapeHtml(err.message)}</p>`;
