@@ -16,6 +16,7 @@
     busqueda: null,
     avisoZona: null,
     moderacionToken: "",
+    modoModerador: false,
     q: "",
     hilo: null,
     piloto: null,
@@ -635,15 +636,10 @@
         Pregunta, elige una zona o marca un punto. El mapa, los contratos y los
         reportes son el mismo hilo: territorio, periodo, observación y fuente.
       </p>
-      <form class="buscar" id="form-buscar">
-        <input type="search" id="q" value="${escapeHtml(estado.q || "")}" placeholder="¿Qué se contrató aquí?">
-        <button type="submit">Buscar</button>
-      </form>
       <div class="cifras">
         <div class="cifra"><b>${r.municipios}</b> municipios</div>
         <div class="cifra"><b>${r.contratos}</b> contratos${esFixture ? " (fixture)" : " (SECOP II)"}</div>
         <div class="cifra"><b>${r.reportes}</b> reportes</div>
-        <div class="cifra"><b>${plata(r.plata_total)}</b> con cifra usable</div>
       </div>
       ${
         excluidos && excluidos.total > 0
@@ -662,8 +658,11 @@
           : ""
       }
       <p class="aviso">${escapeHtml(r.nota)}</p>
-      ${listaConfianza()}
-      <p class="muted"><button type="button" class="tarjeta" data-ir="piloto">Panel del piloto (información interna, no para investigar contratos)</button></p>
+      ${
+        estado.modoModerador
+          ? `<h2>Vista de moderador</h2><p class="muted">Solo visible en este navegador porque activaste el PIN de moderador.</p>${listaConfianza()}`
+          : ""
+      }
     `;
   };
 
@@ -1412,6 +1411,26 @@
   if (campoToken) {
     campoToken.addEventListener("input", () => {
       estado.moderacionToken = campoToken.value;
+    });
+  }
+
+  const botonPiloto = document.getElementById("ir-piloto");
+  if (botonPiloto) {
+    botonPiloto.addEventListener("click", () => irVista("piloto"));
+  }
+
+  const PIN_MODO_MODERADOR = "123";
+  const botonModoModerador = document.getElementById("activar-modo-moderador");
+  if (botonModoModerador) {
+    botonModoModerador.addEventListener("click", () => {
+      const pin = document.getElementById("pin-moderador");
+      const aviso = document.getElementById("estado-modo-moderador");
+      if (pin && pin.value === PIN_MODO_MODERADOR) {
+        estado.modoModerador = true;
+        if (pin) pin.value = "";
+        if (aviso) aviso.hidden = false;
+        renderPanel();
+      }
     });
   }
 

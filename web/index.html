@@ -92,7 +92,13 @@
       <label>Token
         <input type="password" id="token-moderacion" autocomplete="off" placeholder="solo para revisar/retirar/confirmar">
       </label>
+      <label>PIN de vista moderador
+        <input type="password" id="pin-moderador" autocomplete="off" inputmode="numeric" placeholder="modo demo">
+      </label>
+      <button type="button" id="activar-modo-moderador" class="secundario">Activar vista de moderador</button>
+      <p id="estado-modo-moderador" class="muted" hidden>Vista de moderador activa en este navegador.</p>
     </details>
+    <p class="pie-interno"><button type="button" id="ir-piloto" class="enlace-discreto">Panel del piloto (equipo)</button></p>
   </footer>
 
   <script src="/vendor/leaflet/leaflet.js"></script>
