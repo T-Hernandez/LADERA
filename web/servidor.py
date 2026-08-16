@@ -21,6 +21,7 @@ from config import (  # noqa: E402
     RELACIONES_LOCALES,
     REPORTES_LOCALES,
 )
+from busqueda import buscar  # noqa: E402
 from mapa.capas import recorte_territorial  # noqa: E402
 from modelo import ModeloInvalido, reporte, validar_conjunto  # noqa: E402
 from relaciones.almacen import (  # noqa: E402
@@ -108,7 +109,7 @@ def inicio():
 
 @app.get("/api/salud")
 def salud():
-    return jsonify({"ok": True, "fase": 8})
+    return jsonify({"ok": True, "fase": 9})
 
 
 @app.get("/api/datos")
@@ -131,6 +132,28 @@ def api_mapa():
         return jsonify({"error": "anio debe ser un número"}), 400
     except ModeloInvalido as exc:
         return jsonify({"error": str(exc)}), 500
+
+
+@app.post("/api/buscar")
+def api_buscar():
+    cuerpo = request.get_json(silent=True) or {}
+    pregunta = str(cuerpo.get("pregunta") or "").strip()
+    if not pregunta:
+        return jsonify({"error": "escribe una pregunta"}), 400
+    dane = str(cuerpo.get("dane") or "").strip() or None
+    usar_ia = bool(cuerpo.get("usar_ia"))
+    try:
+        datos = ensamblar_datos()
+        resultado = buscar(
+            pregunta,
+            datos,
+            _lookup_municipios(),
+            dane_zona=dane,
+            usar_ia=usar_ia,
+        )
+        return jsonify(resultado)
+    except (ModeloInvalido, ValueError) as exc:
+        return jsonify({"error": str(exc)}), 400
 
 
 @app.get("/api/territorio")

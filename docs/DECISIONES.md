@@ -109,3 +109,13 @@
 **Impacto:** `mapa/capas.py` es la fuente del recorte. La búsqueda inteligente es la Fase 9.
 
 **Descartado:** inferir causalidad, pintar solo contratos, o cargar la capa nacional en el navegador.
+
+## 2026-08-15 — La búsqueda ejecuta filtros, no memoria
+
+**Decisión:** `/api/buscar` interpreta la pregunta a un JSON de filtros (`busqueda/interpretar.py`) y el backend lo corre sobre el conjunto. La IA, si se enciende, solo puede devolver ese JSON; si no hay clave o falla, se usan reglas. El resultado siempre expone contratos, reportes, filtros y fuentes. Cero coincidencias no es cero inversión.
+
+**Motivo:** la Fase 9 pide que una persona no tenga que conocer SECOP. El plan 1.5 exige que la plataforma siga útil sin IA, y que la IA no responda de memoria.
+
+**Impacto:** el recuadro Buscar deja de filtrar en el navegador. No se inventa `url_fuente`.
+
+**Descartado:** que el modelo narre contratos, declare irregularidad o reemplace la fuente.

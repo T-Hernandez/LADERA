@@ -11,6 +11,10 @@
     recorte: null,
     capas: { contratos: true, reportes: true, dinero: false },
     filtro: { anio: "", estado: "" },
+    zonaDane: null,
+    busqueda: null,
+    q: "",
+    usarIa: false,
   };
 
   const $panel = document.getElementById("panel-contenido");
@@ -178,6 +182,7 @@
 
   const abrir = (sel) => {
     estado.seleccionado = sel;
+    if (sel && sel.tipo === "municipio") estado.zonaDane = sel.id;
     if (sel) estado.vista = "mapa";
     pintarCapa();
     document.querySelectorAll(".nav button").forEach((b) => {
@@ -284,7 +289,7 @@
   const vistaExplorar = () => {
     const r = estado.datos.resumen;
     return `
-      <p class="kicker">Fase 8 · mapa de trazabilidad</p>
+      <p class="kicker">Fase 9 · búsqueda</p>
       <h1>Una superficie para contrastar</h1>
       <p class="muted">
         LADERA guarda lo que las personas observan y lo pone al lado de la
@@ -490,43 +495,96 @@
     `;
   };
 
-  const htmlResultadosBusqueda = (q = "") => {
-    const query = q.trim().toLowerCase();
-    if (!query) {
-      return `<p class="muted">Prueba “Popular”, “Niquía” o “movimiento en masa”.</p>`;
+  const textoFiltro = (filtros) => {
+    if (!filtros) return "";
+    const items = [];
+    if (filtros.territorio || filtros.territorio_dane) items.push(`territorio: ${filtros.territorio || filtros.territorio_dane}`);
+    if (filtros.estado_contrato) items.push(`estado: ${filtros.estado_contrato}`);
+    if (filtros.categoria_reporte) items.push(`categoría: ${filtros.categoria_reporte}`);
+    if (filtros.periodo) items.push(`periodo: ${filtros.periodo.desde || "…"} → ${filtros.periodo.hasta || "…"}`);
+    if (filtros.con_reportes) items.push("con reportes");
+    if (filtros.con_relacion) items.push("con relación");
+    if (filtros.texto) items.push(`texto: ${filtros.texto}`);
+    return items.length
+      ? `<ul class="filtros">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`
+      : `<p class="muted">Sin filtros estructurados.</p>`;
+  };
+
+  const htmlResultadosBusqueda = () => {
+    const b = estado.busqueda;
+    if (!b) {
+      return `<p class="muted">Pregunta en lenguaje corriente. No hace falta conocer el nombre del campo en SECOP.</p>`;
     }
-    const contratos = Object.values(estado.datos.contratos).filter((c) =>
-      [c.id, c.objeto, c.entidad, c.municipio_nombre, c.texto_original]
-        .join(" ")
-        .toLowerCase()
-        .includes(query)
-    );
-    const reportes = Object.values(estado.datos.reportes).filter((r) =>
-      [r.descripcion, r.categoria, r.ubicacion.nombre, r.ubicacion.detalle, r.autor]
-        .join(" ")
-        .toLowerCase()
-        .includes(query)
-    );
+    const contratos = b.contratos || [];
+    const reportes = b.reportes || [];
+    const fuentes = (b.fuentes || [])
+      .map((f) => {
+        if (f.url_fuente) {
+          return `<li><a class="enlace" href="${escapeHtml(f.url_fuente)}" target="_blank" rel="noopener">${escapeHtml(f.id)}</a> · ${escapeHtml(f.fuente || "")}</li>`;
+        }
+        return `<li>${escapeHtml(f.tipo)} ${escapeHtml(f.id)} · ${escapeHtml(f.fuente || "")}</li>`;
+      })
+      .join("");
     return `
-      <h2>Contratos</h2>
+      <p class="muted">${escapeHtml((b.interpretacion && b.interpretacion.explicacion) || "")}</p>
+      <p class="muted">Método: ${escapeHtml((b.interpretacion && b.interpretacion.metodo) || "")} · IA: ${escapeHtml((b.interpretacion && b.interpretacion.ia) || "apagada")}</p>
+      <h2>Filtros</h2>
+      ${textoFiltro(b.filtros)}
+      <h2>Contratos (${contratos.length})</h2>
       ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">No se encontraron contratos identificados en el conjunto analizado que coincidan con esta pregunta.</p>`}
-      <h2>Reportes</h2>
+      <h2>Reportes (${reportes.length})</h2>
       ${reportes.length ? `<ul class="lista">${reportes.map(tarjetaReporte).join("")}</ul>` : `<p class="muted">No hay reportes que coincidan.</p>`}
+      <h2>Fuentes</h2>
+      ${fuentes ? `<ul class="fuentes">${fuentes}</ul>` : `<p class="muted">Sin fuentes en este recorte.</p>`}
+      <p class="aviso">${escapeHtml(b.nota || "")}</p>
     `;
   };
 
-  const vistaBuscar = (q = "") => `
-      <p class="kicker">Conjunto analizado</p>
-      <h1>Buscar</h1>
-      <p class="muted">Palabras clave sobre el fixture. La interpretación con IA viene después, y se puede apagar.</p>
-      <p class="buscar"><input type="search" id="q" value="${escapeHtml(q)}" placeholder="contención, Ituango, inconclusa…"></p>
-      <div id="resultados-busqueda">${htmlResultadosBusqueda(q)}</div>
+  const vistaBuscar = () => `
+      <p class="kicker">Búsqueda inteligente</p>
+      <h1>Preguntar</h1>
+      <p class="muted">La pregunta se convierte en filtros. El conjunto analizado responde. La IA, si está apagada, no hace falta. Si preguntas por «esta zona», abre primero un municipio.</p>
+      <form class="buscar" id="form-buscar">
+        <input type="search" id="q" value="${escapeHtml(estado.q || "")}" placeholder="¿Qué se contrató aquí?">
+        <label class="ia-toggle"><input type="checkbox" name="usar_ia" ${estado.usarIa ? "checked" : ""}> Interpretar con IA (si no hay clave, se usan reglas)</label>
+        <button type="submit">Buscar</button>
+      </form>
+      <p class="muted">Ejemplos del plan:</p>
+      <ul class="lista">
+        <li><button type="button" class="tarjeta" data-pregunta="Muéstrame contratos que terminaron el año pasado y tienen reportes de obras inconclusas">Contratos que terminaron el año pasado con reportes de obras inconclusas</button></li>
+        <li><button type="button" class="tarjeta" data-pregunta="¿Qué contratos hay relacionados con esta zona?">Contratos relacionados con esta zona</button></li>
+        <li><button type="button" class="tarjeta" data-pregunta="Obras de mitigación de riesgo que siguen teniendo reportes ciudadanos">Mitigación de riesgo con reportes</button></li>
+      </ul>
+      <div id="resultados-busqueda">${htmlResultadosBusqueda()}</div>
     `;
+
+  const lanzarBusqueda = async (pregunta) => {
+    const cajaIa = document.querySelector('#form-buscar input[name="usar_ia"]');
+    if (cajaIa) estado.usarIa = cajaIa.checked;
+    estado.q = pregunta;
+    const res = await fetch("/api/buscar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pregunta,
+        dane: estado.zonaDane,
+        usar_ia: !!estado.usarIa,
+      }),
+    });
+    const cuerpo = await res.json();
+    if (!res.ok) {
+      estado.busqueda = { interpretacion: { explicacion: cuerpo.error, metodo: "ERROR", ia: "apagada" }, filtros: {}, contratos: [], reportes: [], fuentes: [], nota: "" };
+    } else {
+      estado.busqueda = cuerpo;
+    }
+    const caja = document.getElementById("resultados-busqueda");
+    if (caja) caja.innerHTML = htmlResultadosBusqueda();
+  };
 
   const renderPanel = () => {
     if (estado.vista === "explorar") $panel.innerHTML = vistaExplorar();
     else if (estado.vista === "reportar") $panel.innerHTML = vistaReportar();
-    else if (estado.vista === "buscar") $panel.innerHTML = vistaBuscar(estado.q || "");
+    else if (estado.vista === "buscar") $panel.innerHTML = vistaBuscar();
     else if (estado.seleccionado?.tipo === "municipio") $panel.innerHTML = vistaMunicipio(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "contrato") $panel.innerHTML = vistaContrato(estado.seleccionado.id);
     else if (estado.seleccionado?.tipo === "reporte") $panel.innerHTML = vistaReporte(estado.seleccionado.id);
@@ -580,13 +638,17 @@
       });
     }
 
-    const q = document.getElementById("q");
-    if (q) {
-      q.focus();
-      q.addEventListener("input", () => {
-        estado.q = q.value;
-        const caja = document.getElementById("resultados-busqueda");
-        if (caja) caja.innerHTML = htmlResultadosBusqueda(estado.q);
+    const formBuscar = document.getElementById("form-buscar");
+    if (formBuscar) {
+      const q = document.getElementById("q");
+      if (q) q.focus();
+      formBuscar.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const fd = new FormData(formBuscar);
+        estado.usarIa = fd.get("usar_ia") === "on";
+        const pregunta = (document.getElementById("q") || {}).value || "";
+        if (!pregunta.trim()) return;
+        await lanzarBusqueda(pregunta.trim());
       });
     }
   };
@@ -645,6 +707,15 @@
   });
 
   $panel.addEventListener("click", async (ev) => {
+    const ejemplo = ev.target.closest("[data-pregunta]");
+    if (ejemplo && $panel.contains(ejemplo)) {
+      const pregunta = ejemplo.dataset.pregunta;
+      estado.q = pregunta;
+      const cajaQ = document.getElementById("q");
+      if (cajaQ) cajaQ.value = pregunta;
+      await lanzarBusqueda(pregunta);
+      return;
+    }
     const revisar = ev.target.closest("[data-revisar]");
     if (revisar && $panel.contains(revisar)) {
       const [id, estadoRel] = revisar.dataset.revisar.split(":");

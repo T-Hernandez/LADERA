@@ -363,6 +363,11 @@ form.reporte button,
   display: inline-block;
 }
 
+.buscar {
+  display: grid;
+  gap: 10px;
+}
+
 .buscar input[type="search"] {
   width: 100%;
   background: var(--tinta);
@@ -370,6 +375,28 @@ form.reporte button,
   border: 1px solid var(--linea);
   padding: 10px 12px;
   font: inherit;
+}
+
+.ia-toggle {
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filtros,
+.fuentes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.filtros li,
+.fuentes li {
+  margin: 4px 0;
 }
 
 .evidencia {
