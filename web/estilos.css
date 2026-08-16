@@ -61,7 +61,7 @@ html, body {
 }
 
 .moderacion {
-  margin-left: auto;
+  margin-top: 10px;
   font-size: var(--fs-xs);
   color: var(--muted);
 }
@@ -575,14 +575,6 @@ form.reporte button,
   border-radius: var(--radio-sm);
   padding: 12px 16px;
   font: inherit;
-}
-
-.ia-toggle {
-  color: var(--muted);
-  font-size: var(--fs-xs);
-  display: flex;
-  gap: 8px;
-  align-items: center;
 }
 
 .filtros,

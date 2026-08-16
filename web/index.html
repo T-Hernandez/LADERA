@@ -20,12 +20,6 @@
       <button type="button" data-vista="buscar">Buscar</button>
       <button type="button" data-vista="reportar">Reportar</button>
     </nav>
-    <details class="moderacion">
-      <summary>Modo moderación</summary>
-      <label>Token
-        <input type="password" id="token-moderacion" autocomplete="off" placeholder="solo para revisar/retirar/confirmar">
-      </label>
-    </details>
   </header>
 
   <main class="cuerpo">
@@ -88,11 +82,17 @@
   </dialog>
 
   <footer class="pie">
+    <p id="pie-fuente"></p>
     <p>
-      Los contratos de esta versión son un <strong>fixture</strong>.
       Un reporte es una observación, no un hecho verificado.
       Cero contratos identificados no significa cero inversión.
     </p>
+    <details class="moderacion">
+      <summary>Acceso de moderación</summary>
+      <label>Token
+        <input type="password" id="token-moderacion" autocomplete="off" placeholder="solo para revisar/retirar/confirmar">
+      </label>
+    </details>
   </footer>
 
   <script src="/vendor/leaflet/leaflet.js"></script>

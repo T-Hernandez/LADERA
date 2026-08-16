@@ -417,11 +417,21 @@
       caja.insertAdjacentHTML(
         "beforeend",
         `<span class="chip chip-degradado">
+           <strong>Contratación acumulada</strong>
            <span class="degradado-dinero" aria-hidden="true"></span>
-           menos → más cifra usable
+           <span>menor · mayor</span>
          </span>`
       );
     }
+  };
+
+  const pintarPieFuente = () => {
+    const p = document.getElementById("pie-fuente");
+    if (!p || !estado.datos) return;
+    const esFixture = estado.datos.resumen.fuente === "fixture";
+    p.textContent = esFixture
+      ? "Datos de demostración."
+      : "Datos de contratación provenientes del conjunto procesado de SECOP II.";
   };
 
   const marcarPuntos = () => {
@@ -577,10 +587,17 @@
     return "Conexión descartada";
   };
 
+  const CONEXION_SIGNIFICADO = {
+    SUGERIDA: "LADERA detectó señales que justifican revisar esta conexión. No es una relación comprobada.",
+    CONFIRMADA: "Una persona autorizada revisó y confirmó esta conexión.",
+    DESCARTADA: "Una persona autorizada revisó esta posible conexión y la descartó.",
+  };
+
   const explicacionConexion = (rel) => {
     const items = (rel.senales || []).map((s) => `<li>✓ ${escapeHtml(SENAL_ETIQUETA[s] || s)}</li>`).join("");
     return `
       <div class="conexion-porque">
+        <p class="muted">${escapeHtml(CONEXION_SIGNIFICADO[rel.estado] || "")}</p>
         <p class="muted">¿Por qué LADERA propone esta conexión?</p>
         ${items ? `<ul class="lista-senales">${items}</ul>` : ""}
         <p class="muted">${escapeHtml(rel.evidencia)}</p>
@@ -685,7 +702,7 @@
       <p class="kicker">Zona · ${escapeHtml(mun.dane)}${periodo}</p>
       <h1>${escapeHtml(mun.nombre)}</h1>
       <div class="cifras">
-        <div class="cifra"><b>${plata(snap.plata != null ? snap.plata : mun.plata_total)}</b> cifra usable identificada</div>
+        <div class="cifra"><b>${plata(snap.plata != null ? snap.plata : mun.plata_total)}</b> contratación acumulada</div>
         <div class="cifra"><b>${snap.contratos != null ? snap.contratos : mun.contratos}</b> contratos identificados</div>
         <div class="cifra"><b>${snap.finalizados || 0}</b> finalizados</div>
         <div class="cifra"><b>${snap.activos || 0}</b> activos</div>
@@ -694,6 +711,7 @@
         <div class="cifra"><b>${snap.relaciones_sugeridas || 0}</b> posibles conexiones</div>
         <div class="cifra"><b>${snap.sin_cifra || 0}</b> sin cifra usable</div>
       </div>
+      ${(snap.sin_cifra || 0) > 0 ? `<p class="muted">Algunos valores no pudieron utilizarse para el cálculo.</p>` : ""}
       <p class="aviso">${escapeHtml((estado.recorte && estado.recorte.nota) || "Cero contratos identificados no significa cero inversión.")}</p>
       <h2>${numeroPaso("contratos", 3)}. Contratos en esta zona</h2>
       ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">Sin contratación identificada en el conjunto analizado. Eso no significa cero inversión.</p>`}
@@ -731,7 +749,7 @@
       .filter((x) => x && x.rep);
     const fuente = c.url_fuente
       ? `<p><a class="enlace" href="${escapeHtml(c.url_fuente)}" target="_blank" rel="noopener">Abrir expediente en SECOP</a></p>
-         <p class="muted">El enlace sale del campo URLProceso. En este fixture es de demostración.</p>`
+         <p class="muted">El enlace sale del campo URLProceso.${c.fuente === "fixture" ? " Este contrato es un dato de demostración, no uno real." : ""}</p>`
       : `<p class="muted">Este registro no trae URLProceso.</p>`;
     const lugares = (c.ubicaciones || [])
       .map((u) => `<li><strong>${escapeHtml(u.nombre)}</strong><small>Fragmento: “${escapeHtml(u.fragmento)}”</small></li>`)
@@ -974,19 +992,41 @@
     `;
   };
 
+  const ESTADO_FRASE = {
+    ACTIVO: "Contratos activos",
+    FINALIZADO: "Contratos finalizados",
+    PROXIMO_A_VENCER: "Contratos próximos a vencer",
+    SIN_FECHA_SUFICIENTE: "Sin fecha suficiente para saber el estado",
+    DESCONOCIDO: "Estado del contrato desconocido",
+  };
+
+  const textoPeriodo = (periodo) => {
+    const desde = (periodo.desde || "").slice(0, 4);
+    const hasta = (periodo.hasta || "").slice(0, 4);
+    if (desde && desde === hasta) return desde;
+    if (desde && hasta) return `${desde} → ${hasta}`;
+    return desde || hasta || "periodo sin precisar";
+  };
+
   const textoFiltro = (filtros) => {
     if (!filtros) return "";
     const items = [];
-    if (filtros.territorio || filtros.territorio_dane) items.push(`Municipio: ${filtros.territorio || filtros.territorio_dane}`);
-    if (filtros.estado_contrato) items.push(`Estado del contrato: ${estadosContrato[filtros.estado_contrato] || filtros.estado_contrato}`);
-    if (filtros.categoria_reporte) items.push(`Tipo de observación: ${categorias[filtros.categoria_reporte] || filtros.categoria_reporte}`);
-    if (filtros.periodo) items.push(`Periodo: ${filtros.periodo.desde || "…"} → ${filtros.periodo.hasta || "…"}`);
-    if (filtros.con_reportes) items.push("Con reportes ciudadanos: sí");
-    if (filtros.con_relacion) items.push("Con posible conexión: sí");
-    if (filtros.texto) items.push(`Texto buscado: «${filtros.texto}»`);
+    if (filtros.territorio || filtros.territorio_dane) items.push(`📍 ${filtros.territorio || filtros.territorio_dane}`);
+    if (filtros.periodo) items.push(`📅 ${textoPeriodo(filtros.periodo)}`);
+    if (filtros.estado_contrato) items.push(`📄 ${ESTADO_FRASE[filtros.estado_contrato] || filtros.estado_contrato}`);
+    if (filtros.categoria_reporte) items.push(`👁️ Observaciones de ${(categorias[filtros.categoria_reporte] || filtros.categoria_reporte).toLowerCase()}`);
+    if (filtros.con_reportes) items.push("🔗 Con reportes ciudadanos");
+    if (filtros.con_relacion) items.push("🔗 Con posible conexión registrada");
+    if (filtros.texto) items.push(`🔎 «${filtros.texto}»`);
     return items.length
-      ? `<ul class="filtros">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`
-      : `<p class="muted">No se reconoció un filtro específico; se buscó el texto tal cual en el conjunto analizado.</p>`;
+      ? `<ul class="filtros filtros-entendidos">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`
+      : "";
+  };
+
+  const IA_TEXTO = {
+    usada: "Interpretación asistida por IA",
+    no_configurada: "Interpretación por reglas",
+    fallo: "Interpretación por reglas (la IA no respondió; se usó el respaldo)",
   };
 
   const htmlResultadosBusqueda = () => {
@@ -1004,13 +1044,18 @@
         return `<li>${escapeHtml(f.tipo)} ${escapeHtml(f.id)} · ${escapeHtml(f.fuente || "")}</li>`;
       })
       .join("");
-    const metodo = (b.interpretacion && b.interpretacion.metodo) || "";
+    const interpretacion = b.interpretacion || {};
+    const iaTexto = IA_TEXTO[interpretacion.ia] || "Interpretación por reglas";
+    const suficiente = interpretacion.suficiente !== false;
     return `
       ${estado.avisoZona ? `<p class="aviso">${escapeHtml(estado.avisoZona)}</p>` : ""}
       <h2>LADERA entendió</h2>
-      <p class="muted">${escapeHtml((b.interpretacion && b.interpretacion.explicacion) || "")}</p>
-      ${textoFiltro(b.filtros)}
-      ${metodo === "IA" ? `<p class="muted">Interpretado con ayuda de inteligencia artificial; el backend ejecutó la consulta, la IA no respondió directamente.</p>` : ""}
+      <p class="muted">Interpretación automática · ${escapeHtml(iaTexto)}</p>
+      ${
+        suficiente
+          ? textoFiltro(b.filtros)
+          : `<p class="aviso">${escapeHtml(interpretacion.explicacion || "No pude identificar filtros suficientes. Puedes precisar municipio, año, estado o tema.")}</p>`
+      }
       <h2>Contratos (${contratos.length})</h2>
       ${contratos.length ? `<ul class="lista">${contratos.map(tarjetaContrato).join("")}</ul>` : `<p class="muted">No se encontraron contratos identificados en el conjunto analizado que coincidan con esta pregunta.</p>`}
       <h2>Reportes (${reportes.length})</h2>
@@ -1469,6 +1514,7 @@
       iniciarMapa(geojson);
       llenarAnios();
       pintarLeyenda();
+      pintarPieFuente();
       renderPanel();
     })
     .catch((err) => {
