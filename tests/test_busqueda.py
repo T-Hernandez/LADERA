@@ -169,7 +169,7 @@ class TestEjecutar(unittest.TestCase):
             validar_consulta({"contratos": [{"id": "inventado"}]})
 
     def test_sin_ia_configurada_sigue_funcionando(self):
-        with patch("busqueda.IA_CLAVE", None), patch("busqueda.IA_URL", None):
+        with patch("busqueda.IA_CLAVE", None):
             out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
         self.assertEqual(out["interpretacion"]["ia"], "no_configurada")
@@ -306,76 +306,113 @@ class _RespuestaFalsa:
         return self._cuerpo
 
 
+def _cuerpo_groq(texto: str) -> bytes:
+    # Forma real de Groq (compatible con chat completions de OpenAI):
+    # {"choices": [{"message": {"content": "..."}}]}
+    return json.dumps({"choices": [{"message": {"content": texto}}]}).encode("utf-8")
+
+
 class TestIA(unittest.TestCase):
-    """interpretar_con_ia: éxito, combinación, conflicto, JSON inválido y fallo de red."""
+    """interpretar_con_ia contra la API de Groq: éxito, combinación, conflicto,
+    JSON inválido, respuesta sin choices y fallo de red."""
 
     def _con_clave(self):
         # Hay que parchar el nombre en los dos módulos donde se importó:
         # busqueda/ia.py lo usa para llamar, busqueda/__init__.py lo usa
-        # para decidir si siquiera intenta.
+        # para decidir si siquiera intenta. IA_URL ya no se parcha: es una
+        # constante fija en config.py (el endpoint de Groq), no una variable
+        # de entorno separada.
         return (
             patch("busqueda.ia.IA_CLAVE", "clave-de-prueba"),
-            patch("busqueda.ia.IA_URL", "https://ia.local/chat"),
             patch("busqueda.IA_CLAVE", "clave-de-prueba"),
-            patch("busqueda.IA_URL", "https://ia.local/chat"),
         )
 
     def test_ia_no_configurada_no_se_intenta(self):
-        with patch("busqueda.IA_CLAVE", None), patch("busqueda.IA_URL", None):
+        with patch("busqueda.IA_CLAVE", None):
             out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
         self.assertEqual(out["interpretacion"]["ia"], "no_configurada")
 
     def test_ia_exitosa_se_combina_con_reglas(self):
-        p1, p2, p3, p4 = self._con_clave()
+        p1, p2 = self._con_clave()
         contenido = json.dumps({"territorio_dane": "05001", "estado_contrato": "ACTIVO"})
-        cuerpo = json.dumps({"choices": [{"message": {"content": contenido}}]}).encode("utf-8")
-        with p1, p2, p3, p4, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+        cuerpo = _cuerpo_groq(contenido)
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
             out = buscar("contratos activos en Medellín", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["interpretacion"]["metodo"], "REGLAS+IA")
         self.assertEqual(out["interpretacion"]["ia"], "usada")
         self.assertEqual(out["filtros"]["territorio_dane"], "05001")
 
+    def test_peticion_usa_formato_de_groq(self):
+        # Confirma que armamos la petición real de Groq (Authorization: Bearer,
+        # endpoint de Groq, modelo en el cuerpo).
+        p1, p2 = self._con_clave()
+        cuerpo = _cuerpo_groq(json.dumps({"territorio_dane": "05001"}))
+        capturada = {}
+
+        def _urlopen_falso(req, timeout=None):
+            capturada["headers"] = dict(req.header_items())
+            capturada["url"] = req.full_url
+            capturada["body"] = json.loads(req.data.decode("utf-8"))
+            return _RespuestaFalsa(cuerpo)
+
+        with p1, p2, patch("urllib.request.urlopen", side_effect=_urlopen_falso):
+            buscar("contratos en Medellín", _datos(), _lookup(), usar_ia=True)
+        self.assertEqual(capturada["url"], "https://api.groq.com/openai/v1/chat/completions")
+        self.assertEqual(capturada["headers"].get("Authorization"), "Bearer clave-de-prueba")
+        self.assertIn("model", capturada["body"])
+        self.assertEqual(capturada["body"]["messages"][0]["role"], "system")
+
     def test_ia_no_puede_borrar_periodo_detectado_por_reglas(self):
-        p1, p2, p3, p4 = self._con_clave()
+        p1, p2 = self._con_clave()
         # La IA solo devuelve territorio; el periodo lo detectaron las reglas
         # a partir de "2025" en la pregunta y no debe perderse.
         contenido = json.dumps({"territorio_dane": "05001"})
-        cuerpo = json.dumps({"choices": [{"message": {"content": contenido}}]}).encode("utf-8")
-        with p1, p2, p3, p4, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+        cuerpo = _cuerpo_groq(contenido)
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
             out = buscar("contratos de 2025 en Medellín", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["filtros"]["periodo"]["desde"], "2025-01-01")
 
     def test_conflicto_reglas_ia_gana_reglas(self):
-        p1, p2, p3, p4 = self._con_clave()
+        p1, p2 = self._con_clave()
         contenido = json.dumps({"periodo": {"desde": "2024-01-01", "hasta": "2024-12-31"}})
-        cuerpo = json.dumps({"choices": [{"message": {"content": contenido}}]}).encode("utf-8")
-        with p1, p2, p3, p4, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+        cuerpo = _cuerpo_groq(contenido)
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
             out = buscar("contratos de 2025", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["filtros"]["periodo"]["desde"], "2025-01-01")
         self.assertIn("periodo", out["interpretacion"]["conflictos"])
 
     def test_ia_json_invalido_cae_a_reglas(self):
-        p1, p2, p3, p4 = self._con_clave()
-        cuerpo = json.dumps({"choices": [{"message": {"content": "esto no es JSON"}}]}).encode("utf-8")
-        with p1, p2, p3, p4, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+        p1, p2 = self._con_clave()
+        cuerpo = _cuerpo_groq("esto no es JSON")
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
             out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
         self.assertEqual(out["interpretacion"]["ia"], "fallo")
 
     def test_ia_campo_no_permitido_cae_a_reglas(self):
-        p1, p2, p3, p4 = self._con_clave()
+        p1, p2 = self._con_clave()
         contenido = json.dumps({"contratos": [{"id": "inventado"}]})
-        cuerpo = json.dumps({"choices": [{"message": {"content": contenido}}]}).encode("utf-8")
-        with p1, p2, p3, p4, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+        cuerpo = _cuerpo_groq(contenido)
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
             out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
+
+    def test_ia_sin_choices_cae_a_reglas(self):
+        # Respuesta bien formada pero sin "choices" (ej. un error disfrazado
+        # de 200, o una forma inesperada) — no debe reventar, debe caer a reglas.
+        p1, p2 = self._con_clave()
+        cuerpo = json.dumps({"choices": []}).encode("utf-8")
+        with p1, p2, patch("urllib.request.urlopen", return_value=_RespuestaFalsa(cuerpo)):
+            out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
+        self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
+        self.assertEqual(out["interpretacion"]["ia"], "fallo")
 
     def test_ia_falla_de_red_cae_a_reglas(self):
         import urllib.error
 
-        p1, p2, p3, p4 = self._con_clave()
-        with p1, p2, p3, p4, patch("urllib.request.urlopen", side_effect=urllib.error.URLError("sin red")):
+        p1, p2 = self._con_clave()
+        with p1, p2, patch("urllib.request.urlopen", side_effect=urllib.error.URLError("sin red")):
             out = buscar("Ituango", _datos(), _lookup(), usar_ia=True)
         self.assertEqual(out["interpretacion"]["metodo"], "REGLAS")
         self.assertEqual(out["interpretacion"]["ia"], "fallo")

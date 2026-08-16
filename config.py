@@ -60,12 +60,16 @@ CONSOLIDACION_MANIFIESTO = DIR_METADATA / "consolidacion_manifest.json"
 # "Señalar" queda abierto a cualquier ciudadano a propósito: no lleva token.
 MODERACION_TOKEN = os.environ.get("LADERA_MODERACION_TOKEN") or None
 
-# IA opcional para interpretar preguntas de búsqueda (busqueda/ia.py). Sin
-# estas dos variables, o si la llamada falla, la búsqueda sigue funcionando
-# con el intérprete por reglas (busqueda/interpretar.py) — nunca es obligatoria.
-# Ver README.md, sección "Búsqueda con lenguaje natural".
-IA_CLAVE = os.environ.get("LADERA_IA_CLAVE") or None
-IA_URL = os.environ.get("LADERA_IA_URL") or None
+# IA opcional para interpretar preguntas de búsqueda (busqueda/ia.py), usando
+# la API de Groq (compatible con chat completions, nivel gratuito). Sin
+# LADERA_IA_CLAVE (o si la llamada falla), la búsqueda sigue funcionando con
+# el intérprete por reglas (busqueda/interpretar.py) — nunca es obligatoria.
+# La clave NUNCA va en este archivo ni en el repo: se define como variable de
+# entorno antes de arrancar el servidor. Ver README.md, sección "Búsqueda con
+# lenguaje natural".
+IA_CLAVE = os.environ.get("LADERA_IA_CLAVE") or os.environ.get("GROQ_API_KEY") or None
+IA_MODELO = os.environ.get("LADERA_IA_MODELO") or "llama-3.1-8b-instant"
+IA_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Variantes de ciudad que el lookup no trae con ese texto. No alias cortos ambiguos.
 MUNICIPIO_ALIAS = {

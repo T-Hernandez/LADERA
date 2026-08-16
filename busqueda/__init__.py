@@ -15,7 +15,7 @@ from busqueda.consulta import combinar_filtros, filtros_con_contenido, validar_c
 from busqueda.ejecutar import ejecutar
 from busqueda.ia import interpretar_con_ia
 from busqueda.interpretar import interpretar
-from config import IA_CLAVE, IA_URL
+from config import IA_CLAVE
 
 
 def buscar(
@@ -32,7 +32,7 @@ def buscar(
     filtros = reglas["filtros"]
     metodo = "REGLAS"
     explicacion = reglas["explicacion"]
-    ia_configurada = bool(IA_CLAVE and IA_URL)
+    ia_configurada = bool(IA_CLAVE)
     ia_estado = "no_configurada"
     conflictos: list[str] = []
 

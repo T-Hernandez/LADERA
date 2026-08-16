@@ -46,16 +46,23 @@ $env:LADERA_MODERACION_TOKEN = "el-token-que-quieras"
 
 Sin esta variable, esas rutas responden 401 para todo el mundo, incluso en local. "Señalar" contenido siempre queda abierto, sin token.
 
-### Búsqueda con lenguaje natural (IA opcional)
+### Búsqueda con lenguaje natural (IA opcional, API de Groq)
 
-La búsqueda funciona siempre por reglas (`busqueda/interpretar.py`), sin necesitar IA. Si además defines estas dos variables antes de arrancar el servidor, LADERA intenta interpretar la pregunta con un modelo externo (compatible con el formato de chat completions), y si la clave falta, la llamada falla, o el modelo devuelve algo que no pasa la validación, cae automáticamente a reglas sin romper la búsqueda:
+La búsqueda funciona siempre por reglas (`busqueda/interpretar.py`), sin necesitar IA. Si además defines esta variable antes de arrancar el servidor, LADERA intenta interpretar la pregunta con la API de Groq (nivel gratuito, formato compatible con chat completions), y si la clave falta, la llamada falla, o el modelo devuelve algo que no pasa la validación, cae automáticamente a reglas sin romper la búsqueda:
 
 ```powershell
-$env:LADERA_IA_CLAVE = "tu-clave"
-$env:LADERA_IA_URL = "https://tu-endpoint-compatible-con-chat-completions"
+$env:LADERA_IA_CLAVE = "tu-clave-de-groq"
 ```
 
-El usuario nunca elige entre IA y reglas — LADERA lo decide internamente y siempre expone qué método produjo el resultado. La IA solo puede devolver un JSON de filtros (nunca prosa, nunca inventa contratos ni URLs); ese JSON se valida antes de ejecutarse (`busqueda/consulta.py`).
+(también se acepta la variable estándar `GROQ_API_KEY` como respaldo). Opcionalmente, para cambiar el modelo (por defecto `llama-3.1-8b-instant`):
+
+```powershell
+$env:LADERA_IA_MODELO = "llama-3.3-70b-versatile"
+```
+
+**La clave nunca va en el repositorio.** No hay ninguna clave hardcodeada en `config.py` ni en ningún otro archivo — solo se lee de la variable de entorno en el momento de arrancar. `.env` está en `.gitignore`. Si nunca defines `LADERA_IA_CLAVE`, LADERA sigue funcionando exactamente igual, solo que la interpretación queda 100% a cargo de las reglas.
+
+El usuario nunca elige entre IA y reglas — LADERA lo decide internamente y siempre expone qué método produjo el resultado (`interpretacion.ia`: `no_configurada`, `usada` o `fallo`). La IA solo puede devolver un JSON de filtros (nunca prosa, nunca inventa contratos ni URLs); ese JSON se valida antes de ejecutarse (`busqueda/consulta.py`).
 
 ## Qué probar
 

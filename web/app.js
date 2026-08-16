@@ -330,15 +330,16 @@
     });
   };
 
+  const ESCALA_DINERO = ["#d7eadf", "#91d2b9", "#4ca88e", "#277866", "#153e36"];
+
   const colorDinero = (plata, max) => {
-    if (!plata || !max) return "#d9d2c4";
-    // Escala logarítmica: con datos reales, un municipio con mucha más plata que
-    // el resto dejaba a todos los demás casi del mismo tono con una escala lineal.
+    if (!plata || !max) return "#e4ded0";
+    // Escala logarítmica por tramos: con datos reales, un municipio con mucha
+    // más plata que el resto dejaba a todos los demás casi del mismo tono con
+    // una escala continua. 5 tramos discretos se distinguen a simple vista.
     const t = Math.min(1, Math.log1p(plata) / Math.log1p(max));
-    const r = Math.round(217 + (63 - 217) * t);
-    const g = Math.round(210 + (107 - 210) * t);
-    const b = Math.round(196 + (82 - 196) * t);
-    return `rgb(${r}, ${g}, ${b})`;
+    const indice = Math.min(4, Math.floor(t / 0.2));
+    return ESCALA_DINERO[indice];
   };
 
   const estilo = (feature, seleccionado) => {
@@ -347,30 +348,30 @@
     const capas = estado.capas;
     const tieneC = capas.contratos && snap && snap.contratos > 0;
     const tieneR = capas.reportes && snap && snap.reportes > 0;
-    let fill = "#d9d2c4";
-    let color = "#6a6256";
+    let fill = "#e4ded0";
+    let color = "#8a8272";
     let weight = 1;
     if (capas.dinero && snap && snap.plata > 0) {
       fill = colorDinero(snap.plata, estado.recorte.plata_max);
-      color = "#2a4032";
+      color = "#153e36";
       if (tieneR) {
-        color = "#b5523a";
+        color = "#e6533d";
         weight = 2;
       }
     } else if (tieneC && tieneR) {
-      fill = "#4a5e48";
-      color = "#b5523a";
+      fill = "#2f5b4f";
+      color = "#e6533d";
       weight = 2;
     } else if (tieneC) {
-      fill = "#3f6b52";
-      color = "#2a4032";
+      fill = "#277866";
+      color = "#153e36";
     } else if (tieneR) {
-      fill = "#e4d8c6";
-      color = "#b5523a";
+      fill = "#fbe4de";
+      color = "#e6533d";
       weight = 2;
     }
     if (seleccionado) {
-      color = "#c4a35a";
+      color = "#d97706";
       weight = 3;
     }
     return { fillColor: fill, color, weight, fillOpacity: 0.86 };
@@ -413,11 +414,12 @@
     if (estado.capas.contratos && estado.capas.reportes) chips.push('<span class="chip chip-ambos">ambos</span>');
     caja.innerHTML = chips.join("");
     if (estado.capas.dinero) {
+      const franjas = ESCALA_DINERO.map(() => "<i></i>").join("");
       caja.insertAdjacentHTML(
         "beforeend",
         `<span class="chip chip-degradado">
            <strong>Contratación acumulada</strong>
-           <span class="degradado-dinero" aria-hidden="true"></span>
+           <span class="degradado-dinero" aria-hidden="true">${franjas}</span>
            <span>menor · mayor</span>
          </span>`
       );
