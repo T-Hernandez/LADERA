@@ -578,6 +578,42 @@ form.reporte button,
   height: auto;
 }
 
+.dialogo {
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-md);
+  padding: 24px;
+  max-width: 420px;
+  width: calc(100% - 48px);
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow: 0 12px 32px rgba(31, 42, 34, 0.22);
+}
+
+.dialogo::backdrop {
+  background: rgba(31, 42, 34, 0.45);
+}
+
+.dialogo-titulo {
+  margin: 0 0 10px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+}
+
+.dialogo-texto {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.dialogo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .pie {
   padding: 12px 28px 16px;
   border-top: 1px solid var(--linea);

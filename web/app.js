@@ -72,6 +72,41 @@
     if (original != null) boton.textContent = original;
   };
 
+  const $dialogo = document.getElementById("dialogo-confirmar");
+  const confirmarAccion = ({ titulo = "", texto = "", textoConfirmar = "Confirmar", textoCancelar = "Cancelar" } = {}) =>
+    new Promise((resolve) => {
+      if (!$dialogo || typeof $dialogo.showModal !== "function") {
+        resolve(window.confirm(texto));
+        return;
+      }
+      $dialogo.querySelector("#dialogo-titulo").textContent = titulo;
+      $dialogo.querySelector("#dialogo-texto").textContent = texto;
+      const btnOk = $dialogo.querySelector("#dialogo-confirmar-btn");
+      const btnCancelar = $dialogo.querySelector("#dialogo-cancelar");
+      btnOk.textContent = textoConfirmar;
+      btnCancelar.textContent = textoCancelar;
+      const limpiar = () => {
+        btnOk.removeEventListener("click", onOk);
+        btnCancelar.removeEventListener("click", onCancelar);
+        $dialogo.removeEventListener("cancel", onCancelar);
+      };
+      const onOk = () => {
+        limpiar();
+        $dialogo.close();
+        resolve(true);
+      };
+      const onCancelar = (ev) => {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        limpiar();
+        $dialogo.close();
+        resolve(false);
+      };
+      btnOk.addEventListener("click", onOk);
+      btnCancelar.addEventListener("click", onCancelar);
+      $dialogo.addEventListener("cancel", onCancelar);
+      $dialogo.showModal();
+    });
+
   const plata = (n) => {
     if (n == null) return "cifra no utilizable";
     return new Intl.NumberFormat("es-CO", {
@@ -434,12 +469,15 @@
     }
   };
 
-  const irVista = (vista) => {
+  const irVista = async (vista) => {
     if (estado.vista === "reportar" && vista !== "reportar") {
       if (hayBorradorConContenido()) {
-        const salir = window.confirm(
-          "Tienes una observación sin enviar. Si sales ahora se pierde lo escrito. ¿Salir de todas formas?"
-        );
+        const salir = await confirmarAccion({
+          titulo: "Observación sin enviar",
+          texto: "Tienes una observación sin enviar. Si sales ahora se pierde lo escrito.",
+          textoConfirmar: "Salir sin guardar",
+          textoCancelar: "Seguir editando",
+        });
         if (!salir) return;
       }
       quitarMarcadorBorrador();
